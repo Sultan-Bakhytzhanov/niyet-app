@@ -15,6 +15,7 @@ import React, { useEffect } from 'react';
 export default function SettingsScreen() {
 	const { animatedValue, toggleTheme, theme } = useTheme();
 	const navigation = useNavigation();
+	const router = useRouter();
 
 	const backgroundColor = animatedValue.interpolate({
 		inputRange: [0, 1],

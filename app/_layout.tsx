@@ -14,7 +14,7 @@ export default function RootLayout() {
 				<Stack.Screen
 					name='settings'
 					options={{
-						title: 'Настройки',
+						title: '',
 						headerTintColor: '#00C853',
 						headerTitleAlign: 'center',
 					}}

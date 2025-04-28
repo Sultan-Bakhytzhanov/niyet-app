@@ -8,8 +8,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { useTheme } from '@/providers/ThemeProvider';
 import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
 
@@ -28,7 +27,7 @@ export default function HomeScreen() {
 		outputRange: ['#000000', '#ffffff'],
 	});
 
-	React.useLayoutEffect(() => {
+	useLayoutEffect(() => {
 		navigation.setOptions(getDefaultHeaderOptions(theme));
 	}, [navigation, theme, router]);
 
@@ -41,13 +40,12 @@ export default function HomeScreen() {
 				Начни путь к лучшей версии себя 🚀
 			</Animated.Text>
 
-			<Pressable style={[styles.button, { backgroundColor: '#00C853' }]}>
+			<Pressable style={styles.button} onPress={() => {}}>
 				<Text style={styles.buttonText}>Добавить НИЕТ</Text>
 			</Pressable>
 		</Animated.View>
 	);
 }
-
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
@@ -67,6 +65,7 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 	},
 	button: {
+		backgroundColor: '#00C853',
 		paddingVertical: 12,
 		paddingHorizontal: 24,
 		borderRadius: 8,

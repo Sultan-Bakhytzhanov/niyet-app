@@ -11,33 +11,16 @@ import { useTheme } from '@/providers/ThemeProvider';
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
 
 export default function NiyetsScreen() {
-	const { animatedValue } = useTheme();
+	const { theme, animatedValue } = useTheme();
 	const router = useRouter();
 	const navigation = useNavigation();
 
 	React.useLayoutEffect(() => {
-		navigation.setOptions({
-			headerTitle: '',
-			headerLeft: () => (
-				<Image
-					source={require('@/assets/images/logo.png')}
-					style={{ width: 32, height: 32, marginLeft: 16 }}
-					resizeMode='contain'
-				/>
-			),
-			headerRight: () => (
-				<Pressable
-					onPress={() => router.push('/settings')}
-					style={{ marginRight: 16 }}
-				>
-					<Ionicons name='settings-outline' size={24} color='#00C853' />
-				</Pressable>
-			),
-		});
-	}, [navigation, router]);
+		navigation.setOptions(getDefaultHeaderOptions(theme));
+	}, [navigation, theme, router]);
 
 	const backgroundColor = animatedValue.interpolate({
 		inputRange: [0, 1],

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Appearance, Animated } from 'react-native';
 
-type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark';
 
 interface ThemeContextProps {
 	theme: Theme;
@@ -25,7 +25,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 		setTheme(newTheme);
 		Animated.timing(animatedValue, {
 			toValue: newTheme === 'dark' ? 1 : 0,
-			duration: 500,
+			duration: 300,
 			useNativeDriver: false,
 		}).start();
 	};

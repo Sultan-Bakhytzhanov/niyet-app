@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useTheme } from '@/providers/ThemeProvider';
+import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
 
 export default function HomeScreen() {
 	const navigation = useNavigation();
@@ -28,31 +29,8 @@ export default function HomeScreen() {
 	});
 
 	React.useLayoutEffect(() => {
-		navigation.setOptions({
-			headerTitle: '',
-			headerLeft: () => (
-				<Image
-					source={require('@/assets/images/logo.png')} // сюда путь к твоему лого
-					style={{ width: 32, height: 32, marginLeft: 16 }}
-					resizeMode='contain'
-				/>
-			),
-			headerRight: () => (
-				<Pressable
-					onPress={() => router.push('/settings')}
-					style={{ marginRight: 16 }}
-				>
-					<Ionicons name='settings-outline' size={24} color='#00C853' />
-				</Pressable>
-			),
-			headerStyle: {
-				backgroundColor: theme === 'dark' ? '#121212' : '#ffffff', // Пока без анимации хедера
-			},
-			headerTitleStyle: {
-				color: theme === 'dark' ? '#ffffff' : '#000000',
-			},
-		});
-	}, [navigation, router, theme]);
+		navigation.setOptions(getDefaultHeaderOptions(theme));
+	}, [navigation, theme, router]);
 
 	return (
 		<Animated.View style={[styles.container, { backgroundColor }]}>

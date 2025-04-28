@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/providers/ThemeProvider';
+import { StyleSheet } from 'react-native';
 
 export default function TabLayout() {
 	const { theme } = useTheme();
@@ -15,14 +16,6 @@ export default function TabLayout() {
 					borderTopColor: theme === 'dark' ? '#333333' : '#e0e0e0',
 				},
 				headerShown: true,
-				headerStyle: {
-					backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
-					borderBottomWidth: 1,
-					borderBottomColor: theme === 'dark' ? '#333333' : '#e0e0e0',
-				},
-				headerTitleStyle: {
-					color: theme === 'dark' ? '#ffffff' : '#000000',
-				},
 			}}
 		>
 			<Tabs.Screen

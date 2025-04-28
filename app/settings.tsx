@@ -2,14 +2,19 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/providers/ThemeProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Animated, View, Text, Pressable, StyleSheet } from 'react-native';
+import {
+	Animated,
+	View,
+	Text,
+	Pressable,
+	StyleSheet,
+	Linking,
+} from 'react-native';
 import React, { useEffect } from 'react';
-import { Linking } from 'react-native';
 
 export default function SettingsScreen() {
 	const { animatedValue, toggleTheme, theme } = useTheme();
 	const navigation = useNavigation();
-	const router = useRouter();
 
 	const backgroundColor = animatedValue.interpolate({
 		inputRange: [0, 1],
@@ -25,6 +30,12 @@ export default function SettingsScreen() {
 		navigation.setOptions({
 			headerStyle: {
 				backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
+				borderBottomWidth: StyleSheet.hairlineWidth,
+				borderBottomColor: theme === 'dark' ? '#333333' : '#e0e0e0',
+				elevation: 0,
+				shadowOpacity: 0,
+				shadowColor: 'transparent',
+				shadowOffset: { height: 0, width: 0 },
 			},
 			headerTitleStyle: {
 				color: theme === 'dark' ? '#ffffff' : '#000000',

@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# Niyet — Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Niyet** is a mobile application designed to help users break bad habits and replace them with positive ones through intention setting and habit tracking.
 
-## Get started
+## 📱 Project Overview
 
-1. Install dependencies
+Niyet allows users to:
+
+- Set personal "Niyet" (intentions) by selecting a bad habit they want to quit.
+- Optionally choose a positive habit to replace it.
+- Track their progress with streaks and detailed logs.
+- Get motivational quotes to stay focused on their goals.
+- Manage their profile and app settings (including dark mode).
+
+The project is currently under active development.
+
+## ⚙️ Technologies Used
+
+- **React Native** (via Expo)
+- **TypeScript**
+- **Supabase** (Authentication & Database)
+- **Expo Router** (for navigation)
+- **TailwindCSS for React Native** (via Nativewind)
+
+## 📂 Project Structure (early version)
+
+```
+/niyet-app
+  ├── app/           # App screens and routes
+  ├── assets/        # Images, icons, fonts
+  ├── components/    # Reusable UI components
+  ├── lib/           # Utility functions (e.g., database requests)
+  ├── constants/     # Static variables and configurations
+  ├── provider/      # Context providers (e.g., ThemeProvider, SessionProvider)
+  ├── styles/        # Global styling files
+  ├── README.md      # Project documentation (this file)
+  └── package.json   # Project metadata and dependencies
+```
+
+## 🚀 How to Run Locally
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/Sultan-Bakhytzhanov/niyet-app
+   cd niyet-app
+   ```
+
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Start the project:
 
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. Scan the QR code with Expo Go (on your phone) or run on an emulator.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📅 Project Status
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- [x] Project setup completed
+- [x] Basic screens (Home, Explore, Profile) created
+- [ ] Authentication with Supabase (planned)
+- [ ] Habit tracking system (in progress)
+- [ ] Notifications and reminders (planned)
+- [ ] Final UI polish (planned)
 
-## Get a fresh project
+## 📌 Notes
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- The app is currently in **MVP development phase**.
+- Design and features are subject to change as testing and feedback are received.

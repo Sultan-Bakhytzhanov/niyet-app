@@ -17,6 +17,8 @@ export default function TabLayout() {
 				headerShown: true,
 				headerStyle: {
 					backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
+					borderBottomWidth: 1,
+					borderBottomColor: theme === 'dark' ? '#333333' : '#e0e0e0',
 				},
 				headerTitleStyle: {
 					color: theme === 'dark' ? '#ffffff' : '#000000',
@@ -26,7 +28,7 @@ export default function TabLayout() {
 			<Tabs.Screen
 				name='home'
 				options={{
-					title: '',
+					title: 'Home',
 					tabBarIcon: ({ color, size }) => (
 						<Ionicons name='home-outline' size={size} color={color} />
 					),
@@ -35,7 +37,7 @@ export default function TabLayout() {
 			<Tabs.Screen
 				name='niyets'
 				options={{
-					title: '',
+					title: 'Niyets',
 					tabBarIcon: ({ color, size }) => (
 						<Ionicons name='list-outline' size={size} color={color} />
 					),
@@ -44,7 +46,7 @@ export default function TabLayout() {
 			<Tabs.Screen
 				name='profile'
 				options={{
-					title: '',
+					title: 'Profile',
 					tabBarIcon: ({ color, size }) => (
 						<Ionicons name='person-outline' size={size} color={color} />
 					),

@@ -1,4 +1,11 @@
-import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
+import {
+	View,
+	Image,
+	Text,
+	Pressable,
+	StyleSheet,
+	Animated,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,11 +31,10 @@ export default function HomeScreen() {
 		navigation.setOptions({
 			headerTitle: '',
 			headerLeft: () => (
-				<Ionicons
-					name='home-outline'
-					size={32}
-					color='#00C853'
-					style={{ marginLeft: 16 }}
+				<Image
+					source={require('@/assets/images/logo.png')} // сюда путь к твоему лого
+					style={{ width: 32, height: 32, marginLeft: 16 }}
+					resizeMode='contain'
 				/>
 			),
 			headerRight: () => (

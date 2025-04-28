@@ -1,9 +1,43 @@
-import { View, Text, StyleSheet, FlatList, Animated } from 'react-native';
+import {
+	View,
+	Text,
+	StyleSheet,
+	FlatList,
+	Animated,
+	Image,
+	Pressable,
+} from 'react-native';
 import { useTheme } from '@/providers/ThemeProvider';
 import React from 'react';
+import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function NiyetsScreen() {
 	const { animatedValue } = useTheme();
+	const router = useRouter();
+	const navigation = useNavigation();
+
+	React.useLayoutEffect(() => {
+		navigation.setOptions({
+			headerTitle: '',
+			headerLeft: () => (
+				<Image
+					source={require('@/assets/images/logo.png')}
+					style={{ width: 32, height: 32, marginLeft: 16 }}
+					resizeMode='contain'
+				/>
+			),
+			headerRight: () => (
+				<Pressable
+					onPress={() => router.push('/settings')}
+					style={{ marginRight: 16 }}
+				>
+					<Ionicons name='settings-outline' size={24} color='#00C853' />
+				</Pressable>
+			),
+		});
+	}, [navigation, router]);
 
 	const backgroundColor = animatedValue.interpolate({
 		inputRange: [0, 1],

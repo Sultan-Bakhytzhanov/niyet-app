@@ -36,25 +36,33 @@ export default function SettingsScreen() {
 	return (
 		<Animated.View style={[styles.container, { backgroundColor }]}>
 			<Animated.Text style={[styles.title, { color: textColor }]}>
-				Настройки
+				Settings
 			</Animated.Text>
 
 			<Pressable style={styles.button} onPress={toggleTheme}>
-				<Text style={styles.buttonText}>Сменить тему</Text>
+				<Text style={styles.buttonText}>Theme</Text>
+			</Pressable>
+
+			<Pressable style={styles.button}>
+				<Text style={styles.buttonText}>Language</Text>
 			</Pressable>
 
 			<Pressable
 				style={styles.button}
 				onPress={() => Linking.openURL('https://your-privacy-policy-link.com')}
 			>
-				<Text style={styles.buttonText}>Политика конфиденциальности</Text>
+				<Text style={styles.buttonText}>Privacy Policy</Text>
+			</Pressable>
+
+			<Pressable style={styles.button}>
+				<Text style={styles.buttonText}>FAQ</Text>
 			</Pressable>
 
 			<Pressable
 				style={styles.button}
 				onPress={() => Linking.openURL('mailto:support@example.com')}
 			>
-				<Text style={styles.buttonText}>Написать нам</Text>
+				<Text style={styles.buttonText}>Contact us</Text>
 			</Pressable>
 		</Animated.View>
 	);

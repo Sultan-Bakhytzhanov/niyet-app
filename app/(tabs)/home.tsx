@@ -5,6 +5,7 @@ import {
 	Pressable,
 	StyleSheet,
 	Animated,
+	StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -32,18 +33,26 @@ export default function HomeScreen() {
 	}, [navigation, theme, router]);
 
 	return (
-		<Animated.View style={[styles.container, { backgroundColor }]}>
-			<Animated.Text style={[styles.title, { color: textColor }]}>
-				Добро пожаловать в Niyet!
-			</Animated.Text>
-			<Animated.Text style={[styles.subtitle, { color: textColor }]}>
-				Начни путь к лучшей версии себя 🚀
-			</Animated.Text>
+		<>
+			<StatusBar
+				translucent
+				backgroundColor='transparent'
+				barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
+			/>
 
-			<Pressable style={styles.button} onPress={() => {}}>
-				<Text style={styles.buttonText}>Добавить НИЕТ</Text>
-			</Pressable>
-		</Animated.View>
+			<Animated.View style={[styles.container, { backgroundColor }]}>
+				<Animated.Text style={[styles.title, { color: textColor }]}>
+					Добро пожаловать в Niyet!
+				</Animated.Text>
+				<Animated.Text style={[styles.subtitle, { color: textColor }]}>
+					Начни путь к лучшей версии себя 🚀
+				</Animated.Text>
+
+				<Pressable style={styles.button} onPress={() => {}}>
+					<Text style={styles.buttonText}>Добавить НИЕТ</Text>
+				</Pressable>
+			</Animated.View>
+		</>
 	);
 }
 const styles = StyleSheet.create({

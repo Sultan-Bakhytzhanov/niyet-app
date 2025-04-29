@@ -9,8 +9,9 @@ import {
 	Pressable,
 	StyleSheet,
 	Linking,
+	StatusBar,
 } from 'react-native';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 export default function SettingsScreen() {
 	const { animatedValue, toggleTheme, theme } = useTheme();
@@ -27,7 +28,7 @@ export default function SettingsScreen() {
 		outputRange: ['#000000', '#ffffff'],
 	});
 
-	useEffect(() => {
+	React.useEffect(() => {
 		navigation.setOptions({
 			headerStyle: {
 				backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',

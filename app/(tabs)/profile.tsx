@@ -5,6 +5,7 @@ import {
 	Pressable,
 	Animated,
 	Image,
+	StatusBar,
 } from 'react-native';
 import { useTheme } from '@/providers/ThemeProvider';
 import React from 'react';

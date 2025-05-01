@@ -1,42 +1,48 @@
-import {
-	View,
-	Text,
-	StyleSheet,
-	FlatList,
-	Animated,
-	Image,
-	Pressable,
-	StatusBar,
-} from 'react-native';
-import { useTheme } from '@/providers/ThemeProvider';
-import React from 'react';
+import { StyleSheet, FlatList, Pressable } from 'react-native';
+import { useAnimatedTheme } from '@/providers/ThemeProvider';
+import React, { useLayoutEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { useNavigation } from '@react-navigation/native';
 import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 export default function NiyetsScreen() {
-	const { theme, animatedValue } = useTheme();
+	const { animatedColors } = useAnimatedTheme();
 	const router = useRouter();
 	const navigation = useNavigation();
+	const { colorScheme } = useColorScheme();
 
-	React.useLayoutEffect(() => {
-		navigation.setOptions(getDefaultHeaderOptions(theme));
-	}, [navigation, theme, router]);
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			...getDefaultHeaderOptions(colorScheme),
+			headerRight: () => (
+				<Pressable
+					onPress={() => router.push('/settings')}
+					style={{ marginRight: 16 }}
+				>
+					<Ionicons
+						name='settings-outline'
+						size={24}
+						color={animatedColors.text.value}
+					/>
+				</Pressable>
+			),
+		});
+	}, [navigation, colorScheme, router]);
 
-	const backgroundColor = animatedValue.interpolate({
-		inputRange: [0, 1],
-		outputRange: ['#ffffff', '#121212'],
-	});
+	const backgroundColor = useAnimatedStyle(() => ({
+		backgroundColor: animatedColors.background.value,
+	}));
 
-	const textColor = animatedValue.interpolate({
-		inputRange: [0, 1],
-		outputRange: ['#000000', '#ffffff'],
-	});
+	const textColor = useAnimatedStyle(() => ({
+		color: animatedColors.text.value,
+	}));
 
-	const cardBackground = animatedValue.interpolate({
-		inputRange: [0, 1],
-		outputRange: ['#f2f2f2', '#1e1e1e'],
-	});
+	const cardBackground = useAnimatedStyle(() => ({
+		backgroundColor: animatedColors.surface.value,
+	}));
 
 	const niyets = [
 		{ id: '1', badHabit: 'Курение', goodHabit: 'Спорт' },
@@ -48,22 +54,18 @@ export default function NiyetsScreen() {
 	];
 
 	return (
-		<Animated.View style={[styles.container, { backgroundColor }]}>
-			<Animated.Text style={[styles.title, { color: textColor }]}>
-				Мои НИЕТЫ
-			</Animated.Text>
+		<Animated.View style={[styles.container, backgroundColor]}>
+			<Animated.Text style={[styles.title, textColor]}>Мои НИЕТЫ</Animated.Text>
 
 			<FlatList
 				data={niyets}
 				keyExtractor={item => item.id}
 				renderItem={({ item }) => (
-					<Animated.View
-						style={[styles.card, { backgroundColor: cardBackground }]}
-					>
-						<Animated.Text style={[styles.badHabit, { color: textColor }]}>
+					<Animated.View style={[styles.card, cardBackground]}>
+						<Animated.Text style={[styles.badHabit, textColor]}>
 							🚫 {item.badHabit}
 						</Animated.Text>
-						<Animated.Text style={[styles.goodHabit, { color: textColor }]}>
+						<Animated.Text style={[styles.goodHabit, textColor]}>
 							✅ {item.goodHabit}
 						</Animated.Text>
 					</Animated.View>

@@ -1,47 +1,108 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Appearance, Animated } from 'react-native';
-export type Theme = 'light' | 'dark';
+import React, { createContext, useContext } from 'react';
+import { View } from 'react-native';
+import Animated, {
+	useDerivedValue,
+	withTiming,
+	interpolateColor,
+	useAnimatedStyle,
+} from 'react-native-reanimated';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import Colors from '@/constants/Colors';
 
-interface ThemeContextProps {
-	theme: Theme;
-	toggleTheme: () => void;
-	animatedValue: Animated.Value;
+const ThemeContext = createContext<{
+	animatedColors: {
+		primary: Animated.SharedValue<string>;
+		background: Animated.SharedValue<string>;
+		surface: Animated.SharedValue<string>;
+		text: Animated.SharedValue<string>;
+		textSecondary: Animated.SharedValue<string>;
+		border: Animated.SharedValue<string>;
+	};
+}>({
+	animatedColors: {
+		primary: { value: Colors.light.primary },
+		background: { value: Colors.light.background },
+		surface: { value: Colors.light.surface },
+		text: { value: Colors.light.text },
+		textSecondary: { value: Colors.light.textSecondary },
+		border: { value: Colors.light.border },
+	} as any,
+});
+
+export function useAnimatedTheme() {
+	return useContext(ThemeContext);
 }
 
-const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+	const { colorScheme } = useColorScheme();
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-	const systemColorScheme = Appearance.getColorScheme();
-	const [theme, setTheme] = useState<Theme>(
-		systemColorScheme === 'dark' ? 'dark' : 'light'
-	);
+	const progress = useDerivedValue(() => {
+		return withTiming(colorScheme === 'dark' ? 1 : 0, { duration: 300 });
+	}, [colorScheme]);
 
-	const animatedValue = React.useRef(
-		new Animated.Value(theme === 'dark' ? 1 : 0)
-	).current;
-
-	const toggleTheme = () => {
-		const newTheme = theme === 'light' ? 'dark' : 'light';
-		setTheme(newTheme);
-
-		Animated.timing(animatedValue, {
-			toValue: newTheme === 'dark' ? 1 : 0,
-			duration: 300,
-			useNativeDriver: false,
-		}).start();
+	const animatedColors = {
+		primary: useDerivedValue(() =>
+			interpolateColor(
+				progress.value,
+				[0, 1],
+				[Colors.light.primary, Colors.dark.primary]
+			)
+		),
+		background: useDerivedValue(() =>
+			interpolateColor(
+				progress.value,
+				[0, 1],
+				[Colors.light.background, Colors.dark.background]
+			)
+		),
+		surface: useDerivedValue(() =>
+			interpolateColor(
+				progress.value,
+				[0, 1],
+				[Colors.light.surface, Colors.dark.surface]
+			)
+		),
+		text: useDerivedValue(() =>
+			interpolateColor(
+				progress.value,
+				[0, 1],
+				[Colors.light.text, Colors.dark.text]
+			)
+		),
+		textSecondary: useDerivedValue(() =>
+			interpolateColor(
+				progress.value,
+				[0, 1],
+				[Colors.light.textSecondary, Colors.dark.textSecondary]
+			)
+		),
+		border: useDerivedValue(() =>
+			interpolateColor(
+				progress.value,
+				[0, 1],
+				[Colors.light.border, Colors.dark.border]
+			)
+		),
 	};
 
-	return (
-		<ThemeContext.Provider value={{ theme, toggleTheme, animatedValue }}>
-			{children}
-		</ThemeContext.Provider>
-	);
-};
+	const animatedStyle = useAnimatedStyle(() => ({
+		backgroundColor: animatedColors.background.value,
+		flex: 1,
+	}));
 
-export const useTheme = () => {
-	const context = useContext(ThemeContext);
-	if (!context) {
-		throw new Error('useTheme must be used within a ThemeProvider');
-	}
-	return context;
-};
+	return (
+		<View
+			style={{
+				flex: 1,
+				backgroundColor:
+					colorScheme === 'dark'
+						? Colors.dark.background
+						: Colors.light.background,
+			}}
+		>
+			<ThemeContext.Provider value={{ animatedColors }}>
+				<Animated.View style={animatedStyle}>{children}</Animated.View>
+			</ThemeContext.Provider>
+		</View>
+	);
+}

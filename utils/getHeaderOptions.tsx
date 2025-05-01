@@ -1,37 +1,32 @@
-import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Image, Pressable } from 'react-native';
-import { router } from 'expo-router';
-import { Theme } from '@/providers/ThemeProvider';
+import { Image } from 'react-native';
 
-export function getDefaultHeaderOptions(theme: Theme) {
+export function getDefaultHeaderOptions(
+	colorScheme: 'light' | 'dark',
+	withLogo = true
+) {
 	return {
-		headerTitle: '',
-		headerLeft: () => (
-			<Image
-				source={require('@/assets/images/logo.png')}
-				style={{ width: 32, height: 32, marginLeft: 16 }}
-				resizeMode='contain'
-			/>
-		),
-		headerRight: () => (
-			<Pressable
-				onPress={() => router.push('/settings')}
-				style={{ marginRight: 16 }}
-			>
-				<Ionicons name='settings-outline' size={24} color='#00C853' />
-			</Pressable>
-		),
 		headerStyle: {
-			backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
-			borderBottomWidth: StyleSheet.hairlineWidth,
-			borderBottomColor: theme === 'dark' ? '#333333' : '#e0e0e0',
-			elevation: 0,
-			shadowOpacity: 0,
-			shadowColor: 'transparent',
-			shadowOffset: { height: 0, width: 0 },
+			backgroundColor: colorScheme === 'dark' ? '#121212' : '#ffffff',
+			borderBottomColor: colorScheme === 'dark' ? '#333333' : '#e0e0e0',
+			borderBottomWidth: 1,
 		},
+		headerTitle: '',
+		headerLeft: withLogo
+			? () => (
+					<Image
+						source={require('@/assets/images/logo.png')}
+						style={{
+							width: 32,
+							height: 32,
+							resizeMode: 'contain',
+							marginLeft: 12,
+						}}
+					/>
+			  )
+			: undefined,
 		headerTitleStyle: {
-			color: theme === 'dark' ? '#ffffff' : '#000000',
+			color: colorScheme === 'dark' ? '#ffffff' : '#000000',
 		},
+		headerTintColor: '#00C853',
 	};
 }

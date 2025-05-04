@@ -1,79 +1,101 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { View, Text } from 'react-native';
+import { House, ListTodo, User } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { TouchableOpacity, View, Image } from 'react-native';
+import { router } from 'expo-router';
+import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
-	const { colorScheme } = useColorScheme();
+	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
+	const colors = Colors[colorScheme ?? 'light'];
+
+	const HeaderLeft = () => (
+		<View
+			style={{
+				marginLeft: 8,
+				width: 28,
+				height: 28,
+				borderRadius: 6,
+				overflow: 'hidden',
+				backgroundColor: colors.surface,
+				alignItems: 'center',
+				justifyContent: 'center',
+			}}
+		>
+			<Image
+				source={require('@/assets/images/logo.png')}
+				style={{ width: 24, height: 24 }}
+				resizeMode='contain'
+			/>
+		</View>
+	);
+
+	const HeaderRight = () => (
+		<TouchableOpacity
+			onPress={() => router.push('/settings')}
+			style={{ marginRight: 16 }}
+		>
+			<House size={24} color={colors.text} />
+		</TouchableOpacity>
+	);
 
 	return (
 		<Tabs
-			screenOptions={({ route }) => ({
-				tabBarShowLabel: false,
+			screenOptions={{
+				headerShown: true,
+				headerStyle: {
+					backgroundColor: colors.surface,
+					borderBottomColor: colors.border,
+					borderBottomWidth: 1,
+					elevation: 0,
+					shadowOpacity: 0,
+				},
+				headerTitle: () => null,
+				headerLeft: HeaderLeft,
+				headerRight: HeaderRight,
 				tabBarStyle: {
-					position: 'absolute',
-					bottom: 24,
-					left: 24,
-					right: 24,
-					height: 48,
-					borderRadius: 28,
-					backgroundColor:
-						colorScheme === 'dark' ? 'rgba(18,18,18,0.9)' : '#ffffff',
-					borderTopWidth: 0,
+					backgroundColor: colors.surface,
+					borderTopColor: colors.border,
+					elevation: 0,
+					height: 64,
+					paddingHorizontal: 24,
+				},
+				tabBarActiveTintColor: colors.primary,
+				tabBarInactiveTintColor: colors.tabIconDefault,
+				tabBarLabelStyle: {
+					fontSize: 12,
+					fontWeight: '600',
+				},
+				tabBarIconStyle: {
+					marginBottom: 0,
 				},
 				tabBarItemStyle: {
-					flex: 1,
 					justifyContent: 'center',
 					alignItems: 'center',
 				},
-				tabBarIcon: ({ focused }) => {
-					const iconsMap = {
-						home: 'home-outline',
-						niyets: 'list-outline',
-						profile: 'person-outline',
-					} as const;
-
-					const iconName =
-						iconsMap[route.name as keyof typeof iconsMap] || 'home-outline';
-
-					if (focused) {
-						return (
-							<View
-								style={{
-									flexDirection: 'row',
-									alignItems: 'center',
-									backgroundColor: '#00C853',
-									paddingHorizontal: 12,
-									paddingVertical: 6,
-									borderRadius: 20,
-									flex: 1, // активная кнопка РАСТЯГИВАЕТСЯ на ширину вкладки
-									justifyContent: 'center',
-								}}
-							>
-								<Ionicons name={iconName} size={24} color='#000' />
-								<Text
-									style={{
-										color: '#000',
-										fontWeight: 'bold',
-										marginLeft: 6,
-										fontSize: 14,
-									}}
-								>
-									{route.name.charAt(0).toUpperCase() + route.name.slice(1)}
-								</Text>
-							</View>
-						);
-					} else {
-						return (
-							<Ionicons
-								name={iconName}
-								size={26}
-								color={colorScheme === 'dark' ? '#888' : '#666'}
-							/>
-						);
-					}
-				},
-			})}
-		/>
+			}}
+		>
+			<Tabs.Screen
+				name='home'
+				options={{
+					title: 'Home',
+					tabBarIcon: ({ color }) => <House size={24} color={color} />,
+				}}
+			/>
+			<Tabs.Screen
+				name='niyets'
+				options={{
+					title: 'Niyets',
+					tabBarIcon: ({ color }) => <ListTodo size={24} color={color} />,
+				}}
+			/>
+			<Tabs.Screen
+				name='profile'
+				options={{
+					title: 'Profile',
+					tabBarIcon: ({ color }) => <User size={24} color={color} />,
+				}}
+			/>
+		</Tabs>
 	);
 }

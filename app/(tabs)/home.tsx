@@ -7,12 +7,14 @@ import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import Colors from '@/constants/Colors'; // ✅ импортируем палитру
 
 export default function HomeScreen() {
 	const navigation = useNavigation();
 	const router = useRouter();
 	const { animatedColors } = useAnimatedTheme();
-	const { colorScheme } = useColorScheme();
+	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
+	const colors = Colors[colorScheme ?? 'light'];
 
 	const backgroundColor = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.background.value,
@@ -24,7 +26,7 @@ export default function HomeScreen() {
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
-			...getDefaultHeaderOptions(colorScheme, true), // ✅ шапка с логотипом
+			...getDefaultHeaderOptions(colorScheme, true),
 			headerRight: () => (
 				<Pressable
 					onPress={() => router.push('/settings')}
@@ -33,7 +35,7 @@ export default function HomeScreen() {
 					<Ionicons
 						name='settings-outline'
 						size={24}
-						color={colorScheme === 'dark' ? '#ffffff' : '#000000'}
+						color={colors.text} // 🎯 вместо жёсткого цвета
 					/>
 				</Pressable>
 			),
@@ -43,7 +45,7 @@ export default function HomeScreen() {
 	return (
 		<>
 			<StatusBar
-				backgroundColor={colorScheme === 'dark' ? '#121212' : '#ffffff'}
+				backgroundColor={colors.background} // 🎯 меняем через палитру
 				barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
 			/>
 
@@ -55,8 +57,10 @@ export default function HomeScreen() {
 					Начни путь к лучшей версии себя 🚀
 				</Animated.Text>
 
-				<Pressable style={styles.button} onPress={() => {}}>
-					<Text style={styles.buttonText}>Добавить НИЕТ</Text>
+				<Pressable style={[styles.button, { backgroundColor: colors.primary }]}>
+					<Text style={[styles.buttonText, { color: colors.surface }]}>
+						Добавить НИЕТ
+					</Text>
 				</Pressable>
 			</Animated.View>
 		</>
@@ -82,14 +86,12 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 	},
 	button: {
-		backgroundColor: '#00C853',
 		paddingVertical: 12,
 		paddingHorizontal: 24,
 		borderRadius: 8,
 		elevation: 2,
 	},
 	buttonText: {
-		color: '#fff',
 		fontSize: 18,
 		fontWeight: '600',
 	},

@@ -1,70 +1,100 @@
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, StyleSheet, Pressable, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useRouter } from 'expo-router';
-import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
-import React, { useLayoutEffect } from 'react';
-import {
-	View,
-	Switch,
-	StyleSheet,
-	Pressable,
-	Linking,
-	Text,
-} from 'react-native';
+import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
+import Colors from '@/constants/Colors';
+import CustomSwitch from '@/components/CustomSwitch';
 
 export default function SettingsScreen() {
-	const navigation = useNavigation();
-	const router = useRouter();
-	const { animatedColors } = useAnimatedTheme();
+	const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 	const { colorScheme, toggleColorScheme } = useColorScheme();
-	useLayoutEffect(() => {
-		navigation.setOptions(getDefaultHeaderOptions(colorScheme, false));
-	}, [navigation, colorScheme, router]);
+	const { animatedColors } = useAnimatedTheme();
+	useScreenLayout({ withLogo: false, showSettings: false });
+
+	const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+	const colors = Colors[scheme];
 
 	const backgroundColor = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.background.value,
+	}));
+
+	const surfaceColor = useAnimatedStyle(() => ({
+		backgroundColor: animatedColors.surface.value,
 	}));
 
 	const textColor = useAnimatedStyle(() => ({
 		color: animatedColors.text.value,
 	}));
 
+	const textSecondary = useAnimatedStyle(() => ({
+		color: animatedColors.textSecondary.value,
+	}));
+
 	return (
 		<Animated.View style={[styles.container, backgroundColor]}>
 			<Animated.Text style={[styles.title, textColor]}>Настройки</Animated.Text>
+			<Animated.View style={[styles.card, surfaceColor]}>
+				{/* 🌓 Dark Mode */}
+				<View style={styles.row}>
+					<Ionicons name='moon-outline' size={24} color={colors.text} />
+					<Animated.Text style={[styles.label, textColor]}>
+						Dark Mode
+					</Animated.Text>
+					<View style={styles.flexSpacer} />
+					<CustomSwitch
+						value={colorScheme === 'dark'}
+						onToggle={toggleColorScheme}
+					/>
+				</View>
 
-			<View style={styles.settingItem}>
-				<Animated.Text style={[styles.settingText, textColor]}>
-					Тёмная тема
-				</Animated.Text>
-				<Switch
-					value={colorScheme === 'dark'}
-					onValueChange={toggleColorScheme}
-					trackColor={{ false: '#767577', true: '#00C853' }}
-					thumbColor={colorScheme === 'dark' ? '#00C853' : '#f4f3f4'}
-				/>
-			</View>
+				{/* 🔔 Notifications */}
+				<View style={styles.row}>
+					<Ionicons
+						name='notifications-outline'
+						size={24}
+						color={colors.text}
+					/>
+					<Animated.Text style={[styles.label, textColor]}>
+						Notifications
+					</Animated.Text>
+					<View style={styles.flexSpacer} />
+					<CustomSwitch
+						value={notificationsEnabled}
+						onToggle={() => setNotificationsEnabled(prev => !prev)}
+					/>
+				</View>
 
-			<Pressable
-				style={styles.button}
-				onPress={() => Linking.openURL('https://your-privacy-policy-link.com')}
-			>
-				<Text style={styles.buttonText}>Политика конфиденциальности</Text>
-			</Pressable>
+				{/* 🌐 Language */}
+				<View style={styles.row}>
+					<Ionicons name='globe-outline' size={24} color={colors.text} />
+					<Animated.Text style={[styles.label, textColor]}>
+						Language
+					</Animated.Text>
+					<View style={styles.flexSpacer} />
+					<Animated.Text style={[styles.secondary, textSecondary]}>
+						English
+					</Animated.Text>
+				</View>
 
-			<Pressable style={styles.button}>
-				<Text style={styles.buttonText}>FAQ</Text>
-			</Pressable>
+				{/* ❓ Help */}
+				<Pressable
+					style={styles.row}
+					onPress={() => Linking.openURL('mailto:support@example.com')}
+				>
+					<Ionicons name='help-circle-outline' size={24} color={colors.text} />
+					<Animated.Text style={[styles.label, textColor]}>
+						Help & Support
+					</Animated.Text>
+				</Pressable>
+			</Animated.View>
 
-			<Pressable
-				style={styles.button}
-				onPress={() => Linking.openURL('mailto:support@example.com')}
-			>
-				<Text style={styles.buttonText}>Связаться с нами</Text>
-			</Pressable>
+			{/* 🔢 Version */}
+			<Animated.Text style={[styles.versionText, textSecondary]}>
+				Version 1.0.0
+			</Animated.Text>
 		</Animated.View>
 	);
 }
@@ -73,33 +103,46 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: 20,
+		justifyContent: 'flex-start',
 	},
-	title: {
-		fontSize: 26,
-		fontWeight: 'bold',
-		marginBottom: 24,
-		textAlign: 'center',
+	card: {
+		padding: 20,
+		borderRadius: 16,
+		gap: 20,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
 	},
-	settingItem: {
+	row: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-between',
-		marginBottom: 16,
+		minHeight: 20, // равная высота для всех строк
+		// paddingHorizontal: 8,
 	},
-	settingText: {
-		fontSize: 18,
+	title: {
+		fontSize: 28,
+		fontWeight: '700',
+		textAlign: 'center',
+		marginBottom: 12,
 	},
-	button: {
-		backgroundColor: '#00C853',
-		paddingVertical: 14,
-		paddingHorizontal: 24,
 
-		borderRadius: 8,
-		marginBottom: 16,
+	label: {
+		marginLeft: 12,
+		fontSize: 16,
+		fontWeight: '500',
 	},
-	buttonText: {
-		color: '#fff',
-		fontSize: 18,
-		fontWeight: '600',
+	versionText: {
+		textAlign: 'center',
+		fontSize: 13,
+		opacity: 0.6,
+		marginTop: 16,
+	},
+	secondary: {
+		fontSize: 14,
+	},
+	flexSpacer: {
+		flex: 1,
 	},
 });

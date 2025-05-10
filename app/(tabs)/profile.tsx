@@ -1,46 +1,14 @@
 import { View, Pressable, StyleSheet } from 'react-native';
-import { useAnimatedTheme } from '@/providers/ThemeProvider';
-import React, { useLayoutEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
-import { useNavigation } from '@react-navigation/native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import React from 'react';
+import Animated from 'react-native-reanimated';
 import { Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 
 export default function ProfileScreen() {
-	const { animatedColors } = useAnimatedTheme();
-	const router = useRouter();
-	const navigation = useNavigation();
-
-	const { colorScheme } = useColorScheme();
-
-	useLayoutEffect(() => {
-		navigation.setOptions({
-			...getDefaultHeaderOptions(colorScheme),
-			headerRight: () => (
-				<Pressable
-					onPress={() => router.push('/settings')}
-					style={{ marginRight: 16 }}
-				>
-					<Ionicons
-						name='settings-outline'
-						size={24}
-						color={animatedColors.text.value}
-					/>
-				</Pressable>
-			),
-		});
-	}, [navigation, colorScheme, router]);
-
-	const backgroundColor = useAnimatedStyle(() => ({
-		backgroundColor: animatedColors.background.value,
-	}));
-
-	const textColor = useAnimatedStyle(() => ({
-		color: animatedColors.text.value,
-	}));
+	const { backgroundColor, textColor } = useScreenLayout({
+		withLogo: true,
+		showSettings: true,
+	});
 
 	return (
 		<Animated.View style={[styles.container, backgroundColor]}>

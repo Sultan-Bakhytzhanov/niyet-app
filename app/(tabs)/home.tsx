@@ -1,51 +1,18 @@
 import { View, Text, Pressable, StyleSheet, StatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import React, { useLayoutEffect } from 'react';
-import { useAnimatedTheme } from '@/providers/ThemeProvider';
-import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import Colors from '@/constants/Colors'; // ✅ импортируем палитру
+import React from 'react';
+import Animated from 'react-native-reanimated';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 
 export default function HomeScreen() {
-	const navigation = useNavigation();
-	const router = useRouter();
-	const { animatedColors } = useAnimatedTheme();
-	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
-	const colors = Colors[colorScheme ?? 'light'];
-
-	const backgroundColor = useAnimatedStyle(() => ({
-		backgroundColor: animatedColors.background.value,
-	}));
-
-	const textColor = useAnimatedStyle(() => ({
-		color: animatedColors.text.value,
-	}));
-
-	useLayoutEffect(() => {
-		navigation.setOptions({
-			...getDefaultHeaderOptions(colorScheme, true),
-			headerRight: () => (
-				<Pressable
-					onPress={() => router.push('/settings')}
-					style={{ marginRight: 16 }}
-				>
-					<Ionicons
-						name='settings-outline'
-						size={24}
-						color={colors.text} // 🎯 вместо жёсткого цвета
-					/>
-				</Pressable>
-			),
-		});
-	}, [navigation, colorScheme, router]);
+	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
+		withLogo: true,
+		showSettings: true,
+	});
 
 	return (
 		<>
 			<StatusBar
-				backgroundColor={colors.background} // 🎯 меняем через палитру
+				backgroundColor={colors.background}
 				barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
 			/>
 

@@ -1,45 +1,16 @@
 import { StyleSheet, FlatList, Pressable } from 'react-native';
 import { useAnimatedTheme } from '@/providers/ThemeProvider';
-import React, { useLayoutEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { useNavigation } from '@react-navigation/native';
-import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 
 export default function NiyetsScreen() {
+	const { backgroundColor, textColor } = useScreenLayout({
+		withLogo: true,
+		showSettings: true,
+	});
+
 	const { animatedColors } = useAnimatedTheme();
-	const router = useRouter();
-	const navigation = useNavigation();
-	const { colorScheme } = useColorScheme();
-
-	useLayoutEffect(() => {
-		navigation.setOptions({
-			...getDefaultHeaderOptions(colorScheme),
-			headerRight: () => (
-				<Pressable
-					onPress={() => router.push('/settings')}
-					style={{ marginRight: 16 }}
-				>
-					<Ionicons
-						name='settings-outline'
-						size={24}
-						color={animatedColors.text.value}
-					/>
-				</Pressable>
-			),
-		});
-	}, [navigation, colorScheme, router]);
-
-	const backgroundColor = useAnimatedStyle(() => ({
-		backgroundColor: animatedColors.background.value,
-	}));
-
-	const textColor = useAnimatedStyle(() => ({
-		color: animatedColors.text.value,
-	}));
-
 	const cardBackground = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.surface.value,
 	}));

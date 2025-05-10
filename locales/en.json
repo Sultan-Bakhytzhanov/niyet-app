@@ -1,0 +1,15 @@
+{
+	"welcome": "Welcome to Niyet!",
+	"start_journey": "Start your journey to a better self 🚀",
+	"add_niyet": "Add NIYET",
+	"settings": "Settings",
+	"dark_mode": "Dark Mode",
+	"notifications": "Notifications",
+	"language": "Language",
+	"help_support": "Help & Support",
+	"privacy_policy": "Privacy Policy",
+	"faq": "FAQ",
+	"contact_us": "Contact Us",
+	"version": "Version {{version}}",
+	"select_language": "Select Language"
+}

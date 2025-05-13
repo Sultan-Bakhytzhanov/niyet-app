@@ -7,9 +7,13 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import Colors from '@/constants/Colors';
 import CustomSwitch from '@/components/CustomSwitch';
+import { Picker } from '@react-native-picker/picker';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function SettingsScreen() {
 	const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+	const { language, setLanguage } = useLanguage();
+
 	const { colorScheme, toggleColorScheme } = useColorScheme();
 	const { animatedColors } = useAnimatedTheme();
 	useScreenLayout({ withLogo: false, showSettings: false });
@@ -74,9 +78,20 @@ export default function SettingsScreen() {
 						Language
 					</Animated.Text>
 					<View style={styles.flexSpacer} />
-					<Animated.Text style={[styles.secondary, textSecondary]}>
-						English
-					</Animated.Text>
+					<Picker
+						selectedValue={language}
+						onValueChange={value => setLanguage(value)}
+						style={[
+							styles.languagePicker,
+							{ backgroundColor: colors.surface, color: colors.text }, // под твою тему
+						]}
+						mode='dropdown'
+						dropdownIconColor={colors.text}
+					>
+						<Picker.Item label='EN' value='en' />
+						<Picker.Item label='RU' value='ru' />
+						<Picker.Item label='KZ' value='kz' />
+					</Picker>
 				</View>
 
 				{/* ❓ Help */}
@@ -118,14 +133,42 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		minHeight: 20, // равная высота для всех строк
-		// paddingHorizontal: 8,
+		minHeight: 20,
 	},
 	title: {
 		fontSize: 28,
 		fontWeight: '700',
 		textAlign: 'center',
 		marginBottom: 12,
+	},
+	column: {
+		flexDirection: 'column',
+		gap: 6,
+	},
+	pickerWrapper: {
+		borderWidth: 1,
+		borderColor: '#888',
+		borderRadius: 8,
+		overflow: 'hidden',
+		backgroundColor: 'transparent',
+	},
+	picker: {
+		height: 36,
+		fontSize: 14,
+		paddingVertical: 0,
+		paddingHorizontal: 8,
+		backgroundColor: 'transparent',
+	},
+	languagePicker: {
+		width: 60,
+		height: 32,
+		borderRadius: 8,
+		paddingHorizontal: 6,
+		fontSize: 13,
+		marginRight: -6,
+		marginLeft: 'auto',
+		backgroundColor: '#2e2e2e',
+		color: 'white',
 	},
 
 	label: {

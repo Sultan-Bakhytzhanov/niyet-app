@@ -2,17 +2,21 @@
 	"extends": "expo/tsconfig.base",
 	"compilerOptions": {
 		"strict": true,
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "node",
 		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./*"]
-		}
+		"paths": { "@/*": ["./*"] }
 	},
 	"include": [
-		"**/*.ts",
-		"**/*.tsx",
-		"hooks",
+		"app/**/*.ts",
+		"app/**/*.tsx",
+		"hooks/**/*.ts",
+		"hooks/**/*.tsx",
+		"locales/**/*.json",
+		"types/**/*.d.ts",
 		".expo/types/**/*.ts",
-		"expo-env.d.ts",
-		"types/**/*.ts"
+		"expo-env.d.ts"
 	]
 }

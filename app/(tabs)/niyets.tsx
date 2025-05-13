@@ -3,6 +3,7 @@ import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import React from 'react';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
+import i18n from '@/i18n';
 
 export default function NiyetsScreen() {
 	const { backgroundColor, textColor } = useScreenLayout({
@@ -26,7 +27,9 @@ export default function NiyetsScreen() {
 
 	return (
 		<Animated.View style={[styles.container, backgroundColor]}>
-			<Animated.Text style={[styles.title, textColor]}>Мои НИЕТЫ</Animated.Text>
+			<Animated.Text style={[styles.title, textColor]}>
+				{i18n.t('my_niyets')}
+			</Animated.Text>
 
 			<FlatList
 				data={niyets}

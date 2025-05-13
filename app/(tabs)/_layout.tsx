@@ -4,6 +4,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { TouchableOpacity, View, Image } from 'react-native';
 import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
+import i18n from '@/i18n';
 
 export default function TabLayout() {
 	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
@@ -78,21 +79,21 @@ export default function TabLayout() {
 			<Tabs.Screen
 				name='home'
 				options={{
-					title: 'Home',
+					title: i18n.t('tab_home'),
 					tabBarIcon: ({ color }) => <House size={24} color={color} />,
 				}}
 			/>
 			<Tabs.Screen
 				name='niyets'
 				options={{
-					title: 'Niyets',
+					title: i18n.t('tab_niyets'),
 					tabBarIcon: ({ color }) => <ListTodo size={24} color={color} />,
 				}}
 			/>
 			<Tabs.Screen
 				name='profile'
 				options={{
-					title: 'Profile',
+					title: i18n.t('tab_profile'),
 					tabBarIcon: ({ color }) => <User size={24} color={color} />,
 				}}
 			/>

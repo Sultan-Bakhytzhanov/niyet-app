@@ -9,6 +9,7 @@ import Colors from '@/constants/Colors';
 import CustomSwitch from '@/components/CustomSwitch';
 import { Picker } from '@react-native-picker/picker';
 import { useLanguage } from '@/providers/LanguageProvider';
+import i18n from '@/i18n';
 
 export default function SettingsScreen() {
 	const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -39,13 +40,15 @@ export default function SettingsScreen() {
 
 	return (
 		<Animated.View style={[styles.container, backgroundColor]}>
-			<Animated.Text style={[styles.title, textColor]}>Настройки</Animated.Text>
+			<Animated.Text style={[styles.title, textColor]}>
+				{i18n.t('settings')}
+			</Animated.Text>
 			<Animated.View style={[styles.card, surfaceColor]}>
 				{/* 🌓 Dark Mode */}
 				<View style={styles.row}>
 					<Ionicons name='moon-outline' size={24} color={colors.text} />
 					<Animated.Text style={[styles.label, textColor]}>
-						Dark Mode
+						{i18n.t('dark_mode')}
 					</Animated.Text>
 					<View style={styles.flexSpacer} />
 					<CustomSwitch
@@ -62,7 +65,7 @@ export default function SettingsScreen() {
 						color={colors.text}
 					/>
 					<Animated.Text style={[styles.label, textColor]}>
-						Notifications
+						{i18n.t('notifications')}
 					</Animated.Text>
 					<View style={styles.flexSpacer} />
 					<CustomSwitch
@@ -75,7 +78,7 @@ export default function SettingsScreen() {
 				<View style={styles.row}>
 					<Ionicons name='globe-outline' size={24} color={colors.text} />
 					<Animated.Text style={[styles.label, textColor]}>
-						Language
+						{i18n.t('language')}
 					</Animated.Text>
 					<View style={styles.flexSpacer} />
 					<Picker
@@ -101,14 +104,14 @@ export default function SettingsScreen() {
 				>
 					<Ionicons name='help-circle-outline' size={24} color={colors.text} />
 					<Animated.Text style={[styles.label, textColor]}>
-						Help & Support
+						{i18n.t('help_support')}
 					</Animated.Text>
 				</Pressable>
 			</Animated.View>
 
 			{/* 🔢 Version */}
 			<Animated.Text style={[styles.versionText, textSecondary]}>
-				Version 1.0.0
+				{i18n.t('version')}
 			</Animated.Text>
 		</Animated.View>
 	);

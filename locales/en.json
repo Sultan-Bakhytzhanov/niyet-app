@@ -10,6 +10,51 @@
 	"privacy_policy": "Privacy Policy",
 	"faq": "FAQ",
 	"contact_us": "Contact Us",
-	"version": "Version {{version}}",
-	"select_language": "Select Language"
+	"version": "Version 1.0.0",
+	"select_language": "Select Language",
+
+	"my_niyets": "My Niyets",
+	"no_niyets": "You don’t have any Niyets yet.",
+	"create_new": "Create New",
+	"quote_of_the_day": "Quote of the day",
+
+	"bad_habit": "Bad Habit",
+	"replacement_habit": "Replacement Habit (optional)",
+	"start_date": "Start Date",
+	"save": "Save",
+	"cancel": "Cancel",
+
+	"niyet_details": "Niyet Details",
+	"streak": "Streak",
+	"days": "days",
+	"progress": "Progress",
+	"log_entry": "Log Entry",
+	"add_log": "Add Log",
+	"no_logs": "No logs yet.",
+	"thoughts_placeholder": "Write your thoughts, experiences, or reflections here...",
+
+	"profile": "Profile",
+	"edit_profile": "Edit Profile",
+	"logout": "Log Out",
+	"confirm_logout": "Are you sure you want to log out?",
+
+	"name": "Name",
+	"email": "Email",
+
+	"tab_home": "Home",
+	"tab_niyets": "Niyets",
+	"tab_profile": "Profile",
+
+	"no_notifications": "You don’t have any notifications yet.",
+	"loading": "Loading...",
+	"error_occurred": "An error occurred. Please try again.",
+
+	"today": "Today",
+	"yesterday": "Yesterday",
+
+	"ok": "OK",
+	"yes": "Yes",
+	"no": "No",
+	"done": "Done",
+	"back": "Back"
 }

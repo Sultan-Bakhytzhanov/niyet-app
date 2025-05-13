@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, StatusBar } from 'react-native';
 import React from 'react';
 import Animated from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
+import i18n from '@/i18n';
 
 export default function HomeScreen() {
 	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
@@ -18,15 +19,15 @@ export default function HomeScreen() {
 
 			<Animated.View style={[styles.container, backgroundColor]}>
 				<Animated.Text style={[styles.title, textColor]}>
-					Добро пожаловать в Niyet!
+					{i18n.t('welcome')}
 				</Animated.Text>
 				<Animated.Text style={[styles.subtitle, textColor]}>
-					Начни путь к лучшей версии себя 🚀
+					{i18n.t('start_journey')}
 				</Animated.Text>
 
 				<Pressable style={[styles.button, { backgroundColor: colors.primary }]}>
 					<Text style={[styles.buttonText, { color: colors.surface }]}>
-						Добавить НИЕТ
+						{i18n.t('add_niyet')}
 					</Text>
 				</Pressable>
 			</Animated.View>

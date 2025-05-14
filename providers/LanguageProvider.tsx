@@ -1,9 +1,8 @@
-// providers/LanguageProvider.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as Localization from 'expo-localization';
 import i18n from '../i18n';
 
-type Language = 'en' | 'ru' | 'kz';
+export type Language = 'en' | 'ru' | 'kz';
 
 interface LanguageContextProps {
 	language: Language;

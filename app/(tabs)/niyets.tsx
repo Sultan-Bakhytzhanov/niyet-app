@@ -4,6 +4,7 @@ import React from 'react';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import i18n from '@/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function NiyetsScreen() {
 	const { backgroundColor, textColor } = useScreenLayout({
@@ -15,6 +16,7 @@ export default function NiyetsScreen() {
 	const cardBackground = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.surface.value,
 	}));
+	useLanguage();
 
 	const niyets = [
 		{ id: '1', badHabit: 'Курение', goodHabit: 'Спорт' },

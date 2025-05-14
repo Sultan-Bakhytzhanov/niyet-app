@@ -1,14 +1,15 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { House, ListTodo, User } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { TouchableOpacity, View, Image } from 'react-native';
-import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
 import i18n from '@/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function TabLayout() {
 	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
 	const colors = Colors[colorScheme ?? 'light'];
+	useLanguage();
 
 	const HeaderLeft = () => (
 		<View
@@ -33,7 +34,7 @@ export default function TabLayout() {
 
 	const HeaderRight = () => (
 		<TouchableOpacity
-			onPress={() => router.push('/settings')}
+			onPress={() => router.push('/(stack)/settings')}
 			style={{ marginRight: 16 }}
 		>
 			<House size={24} color={colors.text} />
@@ -83,6 +84,7 @@ export default function TabLayout() {
 					tabBarIcon: ({ color }) => <House size={24} color={color} />,
 				}}
 			/>
+
 			<Tabs.Screen
 				name='niyets'
 				options={{
@@ -90,6 +92,7 @@ export default function TabLayout() {
 					tabBarIcon: ({ color }) => <ListTodo size={24} color={color} />,
 				}}
 			/>
+
 			<Tabs.Screen
 				name='profile'
 				options={{

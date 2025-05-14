@@ -3,8 +3,10 @@ import React from 'react';
 import Animated from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import i18n from '@/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function HomeScreen() {
+	useLanguage();
 	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
 		withLogo: true,
 		showSettings: true,

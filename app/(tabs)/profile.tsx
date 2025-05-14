@@ -3,11 +3,11 @@ import React from 'react';
 import Animated from 'react-native-reanimated';
 import { Text } from 'react-native';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
-import { useTranslation } from '@/hooks/useTranslation';
 import i18n from '@/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function ProfileScreen() {
-	const { t } = useTranslation();
+	useLanguage();
 	const { backgroundColor, textColor } = useScreenLayout({
 		withLogo: true,
 		showSettings: true,

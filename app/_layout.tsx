@@ -5,7 +5,6 @@ import { LanguageProvider } from '@/providers/LanguageProvider';
 export default function RootLayout() {
 	return (
 		<LanguageProvider>
-			{' '}
 			<ThemeProvider>
 				<Stack>
 					<Stack.Screen

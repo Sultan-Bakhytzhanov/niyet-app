@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Linking } from 'react-native';
+import { Text, View, StyleSheet, Pressable, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAnimatedTheme } from '@/providers/ThemeProvider';
@@ -7,13 +7,40 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import Colors from '@/constants/Colors';
 import CustomSwitch from '@/components/CustomSwitch';
-import { Picker } from '@react-native-picker/picker';
 import { useLanguage } from '@/providers/LanguageProvider';
 import i18n from '@/i18n';
+import type { Language } from '@/providers/LanguageProvider';
 
 export default function SettingsScreen() {
 	const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 	const { language, setLanguage } = useLanguage();
+
+	const availableLangs: Language[] = ['en', 'ru', 'kz'];
+
+	const getLangLabel = (lang: Language) => {
+		switch (lang) {
+			case 'en':
+				return 'English';
+			case 'ru':
+				return 'Русский';
+			case 'kz':
+				return 'Қазақша';
+			default:
+				return lang;
+		}
+	};
+
+	const handleNextLang = () => {
+		const index = availableLangs.indexOf(language);
+		const next = (index + 1) % availableLangs.length;
+		setLanguage(availableLangs[next]);
+	};
+
+	const handlePrevLang = () => {
+		const index = availableLangs.indexOf(language);
+		const prev = (index - 1 + availableLangs.length) % availableLangs.length;
+		setLanguage(availableLangs[prev]);
+	};
 
 	const { colorScheme, toggleColorScheme } = useColorScheme();
 	const { animatedColors } = useAnimatedTheme();
@@ -81,20 +108,17 @@ export default function SettingsScreen() {
 						{i18n.t('language')}
 					</Animated.Text>
 					<View style={styles.flexSpacer} />
-					<Picker
-						selectedValue={language}
-						onValueChange={value => setLanguage(value)}
-						style={[
-							styles.languagePicker,
-							{ backgroundColor: colors.surface, color: colors.text }, // под твою тему
-						]}
-						mode='dropdown'
-						dropdownIconColor={colors.text}
-					>
-						<Picker.Item label='EN' value='en' />
-						<Picker.Item label='RU' value='ru' />
-						<Picker.Item label='KZ' value='kz' />
-					</Picker>
+					<View style={styles.languageControl}>
+						<Pressable onPress={handlePrevLang}>
+							<Ionicons name='chevron-back' size={20} color={colors.text} />
+						</Pressable>
+						<Text style={[styles.languageText, { color: colors.text }]}>
+							{getLangLabel(language)}
+						</Text>
+						<Pressable onPress={handleNextLang}>
+							<Ionicons name='chevron-forward' size={20} color={colors.text} />
+						</Pressable>
+					</View>
 				</View>
 
 				{/* ❓ Help */}
@@ -162,16 +186,18 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 		backgroundColor: 'transparent',
 	},
-	languagePicker: {
-		width: 60,
-		height: 32,
-		borderRadius: 8,
-		paddingHorizontal: 6,
-		fontSize: 13,
-		marginRight: -6,
-		marginLeft: 'auto',
-		backgroundColor: '#2e2e2e',
-		color: 'white',
+	languageControl: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'flex-end',
+		minWidth: 120,
+		marginRight: -20,
+	},
+
+	languageText: {
+		marginHorizontal: 6,
+		fontSize: 16,
+		fontWeight: '500',
 	},
 
 	label: {

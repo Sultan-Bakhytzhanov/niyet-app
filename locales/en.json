@@ -1,9 +1,15 @@
 {
 	"welcome": "Welcome to Niyet!",
 	"start_journey": "Start your journey to a better self 🚀",
-	"add_niyet": "Add NIYET",
+	"add_niyet": "Add Niyet",
 	"last_niyet": "Last Niyet",
 	"active_niyets": "Active Niyets",
+
+	"habit_example": "For example, smoking",
+	"good_habit": "Good replacement (optional)",
+	"good_example": "For example, running in the morning",
+	"create": "Create",
+
 	"no_active_niyets": "No active niyets yet.",
 	"update_quote": "Update Quote",
 	"settings": "Settings",

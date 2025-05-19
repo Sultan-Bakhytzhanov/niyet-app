@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
 	View,
 	Text,
@@ -7,11 +7,19 @@ import {
 	StatusBar,
 	ImageBackground,
 	FlatList,
+	ActivityIndicator,
+	Modal,
+	TextInput,
+	TouchableWithoutFeedback,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import i18n from '@/i18n';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { getMotivationalQuote } from '@/api/getMotivationalQuote';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import ScaleModal from '@/components/ScaleModal';
 
 // Тип для ниета
 type Niyet = {
@@ -29,71 +37,78 @@ const backgrounds = [
 	{ img: require('@/assets/images/bg3.jpg'), isDark: true },
 ];
 
-// Заглушки ниетов (можно заменить на useState/загрузку из async storage)
-const MOCK_NIYETS: Niyet[] = [
-	{
-		id: '1',
-		bad: 'Курение',
-		good: 'Бегать утром',
-		progress: 0,
-		streak: 0,
-	},
-	{
-		id: '2',
-		bad: 'Сладкое',
-		good: '',
-		progress: 40,
-		streak: 3,
-	},
-];
-
-// Заглушки цитат (пока вместо API)
-const MOCK_QUOTES = [
-	{
-		quote:
-			'Every small step forward is progress. Your intentions shape your reality.',
-		author: 'Daily Wisdom',
-	},
-	{
-		quote: 'The journey of a thousand miles begins with a single step.',
-		author: 'Lao Tzu',
-	},
-	{
-		quote: 'Mistakes are proof that you are trying.',
-		author: 'Unknown',
-	},
-];
-
 export default function HomeScreen() {
-	useLanguage();
+	const { language } = useLanguage();
+	const router = useRouter();
 	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
 		withLogo: true,
 		showSettings: true,
 	});
 
-	// Фон и цитата
-	const [bg, setBg] = useState(backgrounds[0]);
-	const [quote, setQuote] = useState(MOCK_QUOTES[0].quote);
-	const [author, setAuthor] = useState(MOCK_QUOTES[0].author);
+	const [niyets, setNiyets] = useState<Niyet[]>([]);
+	useEffect(() => {
+		// При первом запуске — загружаем ниеты из AsyncStorage
+		AsyncStorage.getItem('niyets').then(data => {
+			if (data) setNiyets(JSON.parse(data));
+		});
+	}, []);
+	useEffect(() => {
+		// Сохраняем ниеты при каждом изменении списка
+		AsyncStorage.setItem('niyets', JSON.stringify(niyets));
+	}, [niyets]);
+	const [modalVisible, setModalVisible] = useState(false);
+	const [badInput, setBadInput] = useState('');
+	const [goodInput, setGoodInput] = useState('');
 
-	// Функция для смены фона и цитаты (заглушка для API)
-	const rerenderQuoteBlock = () => {
+	function openModal() {
+		setModalVisible(true);
+	}
+	function closeModal() {
+		setModalVisible(false);
+		setBadInput('');
+		setGoodInput('');
+	}
+	function createNiyet() {
+		if (!badInput.trim()) return; // обязательна только вредная привычка
+		setNiyets(prev => [
+			...prev,
+			{
+				id: Date.now().toString(),
+				bad: badInput,
+				good: goodInput,
+				progress: 0,
+				streak: 0,
+			},
+		]);
+		closeModal();
+	}
+
+	const [bg, setBg] = useState(backgrounds[0]);
+	const [quote, setQuote] = useState('');
+	const [author, setAuthor] = useState('');
+	const [loading, setLoading] = useState(true);
+
+	const rerenderQuoteBlock = async () => {
+		setLoading(true);
 		const randBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-		const randQuote =
-			MOCK_QUOTES[Math.floor(Math.random() * MOCK_QUOTES.length)];
 		setBg(randBg);
-		setQuote(randQuote.quote);
-		setAuthor(randQuote.author);
+		try {
+			const res = await getMotivationalQuote(language);
+			setQuote(res.quote);
+			setAuthor(res.author);
+		} catch (e) {
+			setQuote(
+				'Каждый маленький шаг — это прогресс. Твои намерения формируют твою реальность.'
+			);
+			setAuthor('Народная мудрость');
+		}
+		setLoading(false);
 	};
 
 	useEffect(() => {
 		rerenderQuoteBlock();
-	}, []);
-
-	const [niyets, setNiyets] = useState<Niyet[]>(MOCK_NIYETS);
-
-	const lastNiyet = niyets.length > 0 ? niyets[niyets.length - 1] : null;
-	const activeNiyets = niyets.length > 1 ? niyets.slice(0, -1) : [];
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [language]);
 
 	return (
 		<>
@@ -109,24 +124,33 @@ export default function HomeScreen() {
 					style={styles.banner}
 					imageStyle={{ borderRadius: 16 }}
 				>
-					<View style={styles.overlay} />
+					{/* <View style={styles.overlay} />
 					<View style={styles.bannerContent}>
-						<Text
-							style={[
-								styles.quoteText,
-								{ color: bg.isDark ? '#fff' : '#181818' },
-							]}
-						>
-							"{quote}"
-						</Text>
-						<Text
-							style={[
-								styles.quoteAuthor,
-								{ color: bg.isDark ? '#d3d3d3' : '#444' },
-							]}
-						>
-							— {author}
-						</Text>
+						{loading ? (
+							<ActivityIndicator
+								size='small'
+								color={bg.isDark ? '#fff' : '#222'}
+							/>
+						) : (
+							<>
+								<Text
+									style={[
+										styles.quoteText,
+										{ color: bg.isDark ? '#fff' : '#181818' },
+									]}
+								>
+									"{quote}"
+								</Text>
+								<Text
+									style={[
+										styles.quoteAuthor,
+										{ color: bg.isDark ? '#d3d3d3' : '#444' },
+									]}
+								>
+									— {author}
+								</Text>
+							</>
+						)}
 					</View>
 					<Pressable
 						onPress={rerenderQuoteBlock}
@@ -140,41 +164,37 @@ export default function HomeScreen() {
 							padding: 8,
 							borderRadius: 8,
 						}}
+						disabled={loading}
 					>
 						<Text style={{ color: bg.isDark ? '#fff' : '#222', fontSize: 13 }}>
-							Обновить цитату
+							{i18n.t('update_quote') || 'Обновить цитату'}
 						</Text>
-					</Pressable>
+					</Pressable> */}
 				</ImageBackground>
 
-				{/* Последний созданный ниет */}
-				{lastNiyet && (
-					<View style={styles.section}>
-						<Text style={[styles.sectionTitle, { color: colors.text }]}>
-							{i18n.t('last_niyet') || 'Last Niyet'}
-						</Text>
-						<NiyetCard
-							niyet={lastNiyet}
-							colors={colors}
-							colorScheme={colorScheme}
-						/>
-					</View>
-				)}
-
-				{/* Список активных ниетов */}
+				{/* Список всех ниетов */}
 				<View style={styles.section}>
 					<Text style={[styles.sectionTitle, { color: colors.text }]}>
 						{i18n.t('active_niyets') || 'Active Niyets'}
 					</Text>
 					<FlatList
-						data={activeNiyets}
+						data={niyets}
 						keyExtractor={item => item.id}
 						renderItem={({ item }) => (
-							<NiyetCard
-								niyet={item}
-								colors={colors}
-								colorScheme={colorScheme}
-							/>
+							<Pressable
+								onPress={() =>
+									router.push({
+										pathname: '/(stack)/niyet/[id]',
+										params: { id: item.id },
+									})
+								}
+							>
+								<NiyetCard
+									niyet={item}
+									colors={colors}
+									colorScheme={colorScheme}
+								/>
+							</Pressable>
 						)}
 						ListEmptyComponent={
 							<Text
@@ -200,6 +220,7 @@ export default function HomeScreen() {
 								borderColor: colorScheme === 'dark' ? 'transparent' : '#00A877',
 							},
 						]}
+						onPress={openModal}
 					>
 						<Text
 							style={[
@@ -216,6 +237,139 @@ export default function HomeScreen() {
 						</Text>
 					</Pressable>
 				</View>
+
+				{/* Модальное окно для создания ниета */}
+				<ScaleModal
+					visible={modalVisible}
+					onClose={closeModal}
+					overlayColor={
+						colorScheme === 'dark' ? 'rgba(12,16,24,0.7)' : 'rgba(0,0,0,0.2)'
+					}
+					modalStyle={{
+						backgroundColor: colors.surface,
+						borderRadius: 22,
+						paddingVertical: 28,
+						paddingHorizontal: 22,
+						shadowColor: '#000',
+						shadowOffset: { width: 0, height: 3 },
+						shadowOpacity: 0.16,
+						shadowRadius: 9,
+						elevation: 8,
+						width: '87%',
+					}}
+				>
+					<Text
+						style={{
+							fontSize: 20,
+							fontWeight: '700',
+							marginBottom: 18,
+							color: colors.text,
+							textAlign: 'center',
+						}}
+					>
+						{i18n.t('add_niyet') || 'Создать новый ниет'}
+					</Text>
+					<Text
+						style={{
+							color: colors.secondary,
+							fontSize: 14,
+							marginBottom: 4,
+						}}
+					>
+						{i18n.t('bad_habit') || 'Вредная привычка'}*
+					</Text>
+					<TextInput
+						value={badInput}
+						onChangeText={setBadInput}
+						placeholder={i18n.t('habit_example') || 'Например, курение'}
+						placeholderTextColor={colorScheme === 'dark' ? '#555' : '#bcbcbc'}
+						style={{
+							borderWidth: 1,
+							borderColor: colorScheme === 'dark' ? '#383d4b' : '#e1e1e1',
+							backgroundColor: colorScheme === 'dark' ? '#222533' : '#f9f9fc',
+							color: colors.text,
+							borderRadius: 11,
+							paddingVertical: 10,
+							paddingHorizontal: 12,
+							marginBottom: 18,
+							fontSize: 16,
+						}}
+					/>
+					<Text
+						style={{
+							color: colors.secondary,
+							fontSize: 14,
+							marginBottom: 4,
+						}}
+					>
+						{i18n.t('good_habit') || 'Полезная замена (необязательно)'}
+					</Text>
+					<TextInput
+						value={goodInput}
+						onChangeText={setGoodInput}
+						placeholder={i18n.t('good_example') || 'Например, бегать утром'}
+						placeholderTextColor={colorScheme === 'dark' ? '#555' : '#bcbcbc'}
+						style={{
+							borderWidth: 1,
+							borderColor: colorScheme === 'dark' ? '#383d4b' : '#e1e1e1',
+							backgroundColor: colorScheme === 'dark' ? '#222533' : '#f9f9fc',
+							color: colors.text,
+							borderRadius: 11,
+							paddingVertical: 10,
+							paddingHorizontal: 12,
+							marginBottom: 26,
+							fontSize: 16,
+						}}
+					/>
+					<View
+						style={{
+							flexDirection: 'row',
+							justifyContent: 'space-between',
+							marginTop: 5,
+						}}
+					>
+						<Pressable
+							onPress={createNiyet}
+							style={{
+								flex: 1,
+								marginRight: 8,
+								paddingVertical: 12,
+								borderRadius: 10,
+								backgroundColor: colors.primary,
+								alignItems: 'center',
+							}}
+						>
+							<Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+								{i18n.t('create') || 'Создать'}
+							</Text>
+						</Pressable>
+						<Pressable
+							onPress={closeModal}
+							style={{
+								flex: 1,
+								marginLeft: 8,
+								paddingVertical: 12,
+								borderRadius: 10,
+								backgroundColor:
+									colorScheme === 'dark' ? colors.card || '#222533' : '#f5f5f7',
+								alignItems: 'center',
+								borderWidth: colorScheme === 'dark' ? 0 : 1,
+								borderColor: colorScheme === 'dark' ? 'transparent' : '#e1e1e1',
+							}}
+						>
+							<Text
+								style={{
+									color:
+										colorScheme === 'dark' ? colors.secondary : colors.primary,
+									fontWeight: '700',
+									fontSize: 16,
+								}}
+							>
+								{i18n.t('cancel') || 'Отмена'}
+							</Text>
+						</Pressable>
+					</View>
+				</ScaleModal>
 			</Animated.View>
 		</>
 	);

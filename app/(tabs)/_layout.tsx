@@ -1,14 +1,18 @@
-import { Tabs, router } from 'expo-router';
+// app/(tabs)/_layout.tsx
+import React from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { TouchableOpacity, View, Image } from 'react-native';
 import { House, ListTodo, User, Settings } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { TouchableOpacity, View, Image } from 'react-native';
 import Colors from '@/constants/Colors';
 import i18n from '@/i18n';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function TabLayout() {
 	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
-	const colors = Colors[colorScheme ?? 'light'];
+	const colors = Colors[colorScheme];
+	const router = useRouter();
 	useLanguage();
 
 	const HeaderLeft = () => (
@@ -31,10 +35,9 @@ export default function TabLayout() {
 			/>
 		</View>
 	);
-
 	const HeaderRight = () => (
 		<TouchableOpacity
-			onPress={() => router.push('/(stack)/settings')}
+			onPress={() => router.push('/settings')}
 			style={{ marginRight: 16 }}
 		>
 			<Settings size={24} color={colors.text} />
@@ -44,37 +47,24 @@ export default function TabLayout() {
 	return (
 		<Tabs
 			screenOptions={{
-				headerShown: true,
 				headerStyle: {
 					backgroundColor: colors.surface,
 					borderBottomColor: colors.border,
 					borderBottomWidth: 1,
-					elevation: 0,
-					shadowOpacity: 0,
 				},
 				headerTitle: () => null,
 				headerLeft: HeaderLeft,
 				headerRight: HeaderRight,
+
 				tabBarStyle: {
 					backgroundColor: colors.surface,
 					borderTopColor: colors.border,
-					elevation: 0,
 					height: 64,
 					paddingHorizontal: 24,
 				},
 				tabBarActiveTintColor: colors.primary,
 				tabBarInactiveTintColor: colors.tabIconDefault,
-				tabBarLabelStyle: {
-					fontSize: 12,
-					fontWeight: '600',
-				},
-				tabBarIconStyle: {
-					marginBottom: 0,
-				},
-				tabBarItemStyle: {
-					justifyContent: 'center',
-					alignItems: 'center',
-				},
+				tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
 			}}
 		>
 			<Tabs.Screen
@@ -82,14 +72,19 @@ export default function TabLayout() {
 				options={{
 					title: i18n.t('tab_home'),
 					tabBarIcon: ({ color }) => <House size={24} color={color} />,
+					headerShown: true,
 				}}
 			/>
 
 			<Tabs.Screen
 				name='niyets'
-				options={{
-					title: i18n.t('tab_niyets'),
-					tabBarIcon: ({ color }) => <ListTodo size={24} color={color} />,
+				options={({ route }) => {
+					const nested = getFocusedRouteNameFromRoute(route);
+					return {
+						title: i18n.t('tab_niyets'),
+						tabBarIcon: ({ color }) => <ListTodo size={24} color={color} />,
+						headerShown: nested == null,
+					};
 				}}
 			/>
 
@@ -98,6 +93,7 @@ export default function TabLayout() {
 				options={{
 					title: i18n.t('tab_profile'),
 					tabBarIcon: ({ color }) => <User size={24} color={color} />,
+					headerShown: true,
 				}}
 			/>
 		</Tabs>

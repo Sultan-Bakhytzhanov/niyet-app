@@ -1,4 +1,5 @@
 import { Image } from 'react-native';
+import React from 'react';
 
 export function getDefaultHeaderOptions(
 	colorScheme: 'light' | 'dark',

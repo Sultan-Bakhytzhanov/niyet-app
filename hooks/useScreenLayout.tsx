@@ -1,60 +1,82 @@
-import { useLayoutEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import React from 'react';
 import { Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
+import { useAnimatedStyle } from 'react-native-reanimated';
+import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useAnimatedTheme } from '@/providers/ThemeProvider';
-import { useAnimatedStyle } from 'react-native-reanimated';
+import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
 
 type Options = {
+	/** Показывать ли логотип в хедере */
 	withLogo?: boolean;
+	/** Показывать ли кнопку настроек справа */
 	showSettings?: boolean;
 };
 
-export function useScreenLayout(options: Options = {}) {
-	const navigation = useNavigation();
-	const router = useRouter();
+type UseScreenLayoutResult = {
+	/** Анимированный стиль фона */
+	backgroundColor: ReturnType<typeof useAnimatedStyle>;
+	/** Анимированный стиль текста */
+	textColor: ReturnType<typeof useAnimatedStyle>;
+	/** Статические цвета текущей темы */
+	colors: typeof Colors.light;
+	/** Текущая схема: 'light' или 'dark' */
+	colorScheme: 'light' | 'dark';
+	/** Опции для header, применяются в screenOptions */
+	headerOptions: any;
+};
+
+/**
+ * Хук для получения стилей экрана и декларативных опций хедера
+ * Без вызова navigation.setOptions внутри.
+ */
+export function useScreenLayout(options: Options = {}): UseScreenLayoutResult {
 	const { animatedColors } = useAnimatedTheme();
 	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
 	const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+	const colors = Colors[scheme];
 
-	useLayoutEffect(() => {
-		navigation.setOptions({
-			...getDefaultHeaderOptions(colorScheme, options.withLogo),
-			headerRight: options.showSettings
-				? () => (
-						<Pressable
-							onPress={() => router.push('/settings')}
-							style={{ marginRight: 16 }}
-						>
-							<Ionicons
-								name='settings-outline'
-								size={24}
-								color={Colors[scheme].text}
-							/>
-						</Pressable>
-				  )
-				: undefined,
-		});
-	}, [navigation, router, colorScheme, scheme, options]);
-
+	// Анимированные стили
 	const backgroundColor = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.background.value,
 	}));
-
 	const textColor = useAnimatedStyle(() => ({
 		color: animatedColors.text.value,
 	}));
 
+	// Дефолтные опции заголовка из утилиты
+	const defaultHeader = getDefaultHeaderOptions(colorScheme, options.withLogo);
+	const router = useRouter();
+	const headerRight = options.showSettings
+		? () => (
+				<Pressable
+					onPress={() => router.push('/settings')}
+					style={{ marginRight: 16 }}
+				>
+					<Ionicons name='settings-outline' size={24} color={colors.text} />
+				</Pressable>
+		  )
+		: undefined;
+
+	const headerOptions = {
+		...defaultHeader,
+		headerRight,
+		headerStyle: {
+			...(defaultHeader.headerStyle || {}),
+			backgroundColor: colors.surface,
+			borderBottomColor: colors.border,
+			borderBottomWidth: 1,
+		},
+		headerTintColor: colors.text,
+	};
+
 	return {
 		backgroundColor,
 		textColor,
-		colors: Colors[scheme],
-		colorScheme,
-		navigation,
-		router,
+		colors,
+		colorScheme: scheme,
+		headerOptions,
 	};
 }

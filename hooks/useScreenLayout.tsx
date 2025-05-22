@@ -9,9 +9,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { getDefaultHeaderOptions } from '@/utils/getHeaderOptions';
 
 type Options = {
-	/** Показывать ли логотип в хедере */
 	withLogo?: boolean;
-	/** Показывать ли кнопку настроек справа */
 	showSettings?: boolean;
 };
 

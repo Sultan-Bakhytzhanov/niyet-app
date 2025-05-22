@@ -55,7 +55,7 @@ export default function TabLayout() {
 				headerTitle: () => null,
 				headerLeft: HeaderLeft,
 				headerRight: HeaderRight,
-
+				headerShown: false,
 				tabBarStyle: {
 					backgroundColor: colors.surface,
 					borderTopColor: colors.border,

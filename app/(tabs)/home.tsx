@@ -21,7 +21,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import ScaleModal from '@/components/ScaleModal';
 
-// Тип для ниета
 type Niyet = {
 	id: string;
 	bad: string;
@@ -30,7 +29,6 @@ type Niyet = {
 	streak: number;
 };
 
-// Фоны + признак темного/светлого
 const backgrounds = [
 	{ img: require('@/assets/images/bg1.png'), isDark: true },
 	{ img: require('@/assets/images/bg2.jpg'), isDark: true },
@@ -61,7 +59,9 @@ export default function HomeScreen() {
 	const [goodInput, setGoodInput] = useState('');
 
 	function openModal() {
-		setModalVisible(true);
+		setTimeout(() => {
+			setModalVisible(true);
+		}, 50);
 	}
 	function closeModal() {
 		setModalVisible(false);

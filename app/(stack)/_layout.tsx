@@ -10,6 +10,7 @@ export default function StackLayout() {
 				headerTintColor: colors.text,
 				headerTitle: '',
 				headerShadowVisible: false,
+				headerShown: false,
 			}}
 		/>
 	);

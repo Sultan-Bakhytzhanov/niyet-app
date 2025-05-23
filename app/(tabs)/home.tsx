@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
 	View,
 	Text,
@@ -20,6 +20,8 @@ import { getMotivationalQuote } from '@/api/getMotivationalQuote';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import ScaleModal from '@/components/ScaleModal';
+import { useFocusEffect } from '@react-navigation/native';
+import { ScrollView } from 'react-native';
 
 type Niyet = {
 	id: string;
@@ -35,6 +37,16 @@ const backgrounds = [
 	{ img: require('@/assets/images/bg3.jpg'), isDark: true },
 ];
 
+async function getNiyetsFromStorage(): Promise<Niyet[]> {
+	try {
+		const jsonValue = await AsyncStorage.getItem('niyets');
+		return jsonValue != null ? JSON.parse(jsonValue) : [];
+	} catch (e) {
+		console.error('Ошибка загрузки ниетов:', e);
+		return [];
+	}
+}
+
 export default function HomeScreen() {
 	const { language } = useLanguage();
 	const router = useRouter();
@@ -44,12 +56,17 @@ export default function HomeScreen() {
 	});
 
 	const [niyets, setNiyets] = useState<Niyet[]>([]);
-	useEffect(() => {
-		// При первом запуске — загружаем ниеты из AsyncStorage
-		AsyncStorage.getItem('niyets').then(data => {
-			if (data) setNiyets(JSON.parse(data));
-		});
-	}, []);
+	useFocusEffect(
+		useCallback(() => {
+			const loadNiyets = async () => {
+				const storedNiyets = await getNiyetsFromStorage();
+				setNiyets(storedNiyets);
+			};
+
+			loadNiyets();
+		}, [])
+	);
+
 	useEffect(() => {
 		// Сохраняем ниеты при каждом изменении списка
 		AsyncStorage.setItem('niyets', JSON.stringify(niyets));
@@ -110,8 +127,13 @@ export default function HomeScreen() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [language]);
 
+	const lastNiyet = niyets.length > 0 ? niyets[niyets.length - 1] : null;
+	const topStreaks = [...niyets]
+		.sort((a, b) => b.streak - a.streak)
+		.slice(0, 3);
+
 	return (
-		<>
+		<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
 			<StatusBar
 				backgroundColor={colors.background}
 				barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
@@ -172,42 +194,79 @@ export default function HomeScreen() {
 					</Pressable> */}
 				</ImageBackground>
 
-				{/* Список всех ниетов */}
+				{/* Ниеты */}
 				<View style={styles.section}>
-					<Text style={[styles.sectionTitle, { color: colors.text }]}>
-						{i18n.t('active_niyets') || 'Active Niyets'}
-					</Text>
-					<FlatList
-						data={niyets}
-						keyExtractor={item => item.id}
-						renderItem={({ item }) => (
+					<View style={styles.section}>
+						<Text style={[styles.sectionTitle, { color: colors.text }]}>
+							{i18n.t('latest_niyet') || 'Последний ниет'}
+						</Text>
+						{lastNiyet ? (
 							<Pressable
 								onPress={() =>
 									router.push({
 										pathname: '/(stack)/niyet/[id]',
-										params: { id: item.id },
+										params: { id: lastNiyet.id },
 									})
 								}
 							>
 								<NiyetCard
-									niyet={item}
+									niyet={lastNiyet}
 									colors={colors}
 									colorScheme={colorScheme}
 								/>
 							</Pressable>
-						)}
-						ListEmptyComponent={
+						) : (
 							<Text
 								style={{
 									color: colors.secondary,
 									textAlign: 'center',
-									marginVertical: 16,
+									marginVertical: 12,
 								}}
 							>
-								{i18n.t('no_active_niyets') || 'No active niyets yet.'}
+								{i18n.t('no_niyets') || 'Нет ни одного ниета'}
 							</Text>
-						}
-					/>
+						)}
+
+						<Text
+							style={[
+								styles.sectionTitle,
+								{ color: colors.text, marginTop: 24 },
+							]}
+						>
+							{i18n.t('top_streaks') || 'Топ-3 по стрику'}
+						</Text>
+
+						{topStreaks.length > 0 ? (
+							topStreaks.map(niyet => (
+								<Pressable
+									key={niyet.id}
+									onPress={() =>
+										router.push({
+											pathname: '/(stack)/niyet/[id]',
+											params: { id: niyet.id },
+										})
+									}
+								>
+									<NiyetCard
+										niyet={niyet}
+										colors={colors}
+										colorScheme={colorScheme}
+									/>
+								</Pressable>
+							))
+						) : (
+							<Text
+								style={{
+									color: colors.secondary,
+									textAlign: 'center',
+									marginVertical: 12,
+								}}
+							>
+								{i18n.t('no_top_niyets') || 'Нет данных для топа'}
+							</Text>
+						)}
+					</View>
+
 					<Pressable
 						style={[
 							styles.createBtn,
@@ -371,7 +430,7 @@ export default function HomeScreen() {
 					</View>
 				</ScaleModal>
 			</Animated.View>
-		</>
+		</ScrollView>
 	);
 }
 
@@ -431,7 +490,7 @@ function NiyetCard({
 						{ color: isDark ? colors.secondary : '#656565' },
 					]}
 				>
-					{niyet.streak} day streak
+					🔥 {niyet.streak}
 				</Text>
 			</View>
 		</View>
@@ -481,6 +540,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		padding: 14,
 		marginTop: 12,
+		marginBottom: 16,
 	},
 	createBtnText: { fontSize: 16, fontWeight: '600' },
 });

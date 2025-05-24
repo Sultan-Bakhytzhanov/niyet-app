@@ -47,9 +47,26 @@
 	"email": "Почта",
 	"tab_home": "Главная",
 
+	"niyets_active": "Активные",
+	"niyets_completed": "Завершенные",
+	"niyets_paused": "На паузе",
+	"no_niyets_in_category": "В этой категории пока нет ниетов.",
+	"status_paused": "Статус: На паузе",
+	"status_completed": "Статус: Завершен",
+
 	"latest_niyet": "Последний ниет",
 	"top_streaks": "Топ ниетов (по серии)",
 	"no_top_niyets": "У вас пока нет ниетов с большим стриком.",
+
+	"profile_title": "Профиль",
+	"profile_personal_info": "Личная информация",
+	"profile_name": "Имя",
+	"profile_email": "Электронная почта",
+	"profile_app_settings": "Настройки приложения",
+	"profile_notifications": "Уведомления",
+	"profile_privacy": "Конфиденциальность",
+	"profile_general_settings": "Общие настройки",
+	"profile_logout": "Выйти из аккаунта",
 
 	"tab_niyets": "Ниеты",
 	"tab_profile": "Профиль",

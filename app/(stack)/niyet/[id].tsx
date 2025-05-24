@@ -18,24 +18,8 @@ import NiyetInfoCard from '@/components/NiyetInfoCard'; // Предполага�
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 // Импортируем иконки (пример, можно использовать expo-vector-icons)
 import { Ionicons } from '@expo/vector-icons';
-
+import type { Niyet, LogEntry } from '@/types/Niyet';
 // Обновим тип для логов, чтобы включить ID и timestamp
-type LogEntry = {
-	id: string;
-	text: string;
-	createdAt: string; // ISO date string
-};
-
-type Niyet = {
-	id: string;
-	bad: string;
-	good?: string;
-	progress: number;
-	streak: number;
-	createdAt?: string; // Дата создания Ниета
-	logs?: LogEntry[];
-	// lastMarkedDate?: string; // Для логики сброса серии (пока не реализуем)
-};
 
 const STORAGE_KEY = 'niyets';
 

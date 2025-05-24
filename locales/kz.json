@@ -53,6 +53,12 @@
 	"error_occurred": "Қате орын алды. Қайталап көріңіз.",
 	"today": "Бүгін",
 	"yesterday": "Кеше",
+	"niyets_active": "Белсенді",
+	"niyets_completed": "Аяқталған",
+	"niyets_paused": "Кідіртілген",
+	"no_niyets_in_category": "Бұл санатта әзірге ниеттер жоқ.",
+	"status_paused": "Мәртебесі: Кідіртілген",
+	"status_completed": "Мәртебесі: Аяқталған",
 	"ok": "ОК",
 	"yes": "Иә",
 	"no": "Жоқ",
@@ -60,5 +66,14 @@
 	"back": "Артқа",
 	"latest_niyet": "Соңғы ниет",
 	"top_streaks": "Үздік ниеттер (серия бойынша)",
-	"no_top_niyets": "Сізде әлі үздік ниеттер жоқ."
+	"no_top_niyets": "Сізде әлі үздік ниеттер жоқ.",
+	"profile_title": "Профиль",
+	"profile_personal_info": "Жеке ақпарат",
+	"profile_name": "Аты",
+	"profile_email": "Электрондық пошта",
+	"profile_app_settings": "Қосымша баптаулары",
+	"profile_notifications": "Хабарландырулар",
+	"profile_privacy": "Құпиялылық",
+	"profile_general_settings": "Жалпы баптаулар",
+	"profile_logout": "Аккаунттан шығу"
 }

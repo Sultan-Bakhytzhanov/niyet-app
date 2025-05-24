@@ -22,14 +22,7 @@ import { useRouter } from 'expo-router';
 import ScaleModal from '@/components/ScaleModal';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView } from 'react-native';
-
-type Niyet = {
-	id: string;
-	bad: string;
-	good?: string;
-	progress: number;
-	streak: number;
-};
+import type { Niyet, LogEntry } from '@/types/Niyet';
 
 const backgrounds = [
 	{ img: require('@/assets/images/bg1.png'), isDark: true },
@@ -56,20 +49,34 @@ export default function HomeScreen() {
 	});
 
 	const [niyets, setNiyets] = useState<Niyet[]>([]);
+	const STORAGE_KEY = 'niyets';
 	useFocusEffect(
 		useCallback(() => {
 			const loadNiyets = async () => {
-				const storedNiyets = await getNiyetsFromStorage();
-				setNiyets(storedNiyets);
+				console.log('HomeScreen: Loading niyets on focus...');
+				const storedNiyets = await getNiyetsFromStorage(); // Reads from AsyncStorage
+				setNiyets(storedNiyets); // Sets the local state, triggering UI update
 			};
-
 			loadNiyets();
 		}, [])
 	);
 
 	useEffect(() => {
-		// Сохраняем ниеты при каждом изменении списка
-		AsyncStorage.setItem('niyets', JSON.stringify(niyets));
+		const saveNiyetsToStorage = async () => {
+			if (niyets !== undefined) {
+				console.log(
+					'HomeScreen: Saving niyets to AsyncStorage due to state change...',
+					niyets
+				);
+				try {
+					await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(niyets));
+				} catch (e) {
+					console.error('HomeScreen: Failed to save niyets to AsyncStorage', e);
+				}
+			}
+		};
+
+		saveNiyetsToStorage();
 	}, [niyets]);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [badInput, setBadInput] = useState('');
@@ -85,20 +92,53 @@ export default function HomeScreen() {
 		setBadInput('');
 		setGoodInput('');
 	}
-	function createNiyet() {
-		if (!badInput.trim()) return; // обязательна только вредная привычка
-		setNiyets(prev => [
-			...prev,
-			{
-				id: Date.now().toString(),
-				bad: badInput,
-				good: goodInput,
-				progress: 0,
-				streak: 0,
-			},
-		]);
-		closeModal();
+	async function createNiyet(
+		badInput: string,
+		goodInput: string,
+		closeModal: () => void,
+		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
+	) {
+		if (!badInput.trim()) {
+			console.warn("Поле 'Вредная привычка' не может быть пустым.");
+			return;
+		}
+
+		const newNiyet: Niyet = {
+			id: Date.now().toString(),
+			bad: badInput.trim(),
+			good: goodInput.trim() || undefined, // Если goodInput пустой, делаем его undefined
+			progress: 0,
+			streak: 0,
+			createdAt: new Date().toISOString(), // Добавляем дату создания
+			status: 'active', // По умолчанию новый ниет активен
+			logs: [], // Инициализируем пустым массивом логов
+		};
+
+		try {
+			const existingNiyetsJson = await AsyncStorage.getItem(STORAGE_KEY);
+			const existingNiyets: Niyet[] = existingNiyetsJson
+				? JSON.parse(existingNiyetsJson)
+				: [];
+
+			const updatedNiyets = [newNiyet, ...existingNiyets];
+			setNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
+			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
+
+			console.log('Ниет успешно создан и сохранен:', newNiyet);
+
+			if (setNiyetsOnScreen) {
+				setNiyetsOnScreen(updatedNiyets);
+			}
+
+			closeModal();
+		} catch (error) {
+			console.error('Ошибка при создании ниета:', error);
+		}
 	}
+
+	const handleCreateNiyetPress = async () => {
+		await createNiyet(badInput, goodInput, closeModal);
+	};
 
 	const [bg, setBg] = useState(backgrounds[0]);
 	const [quote, setQuote] = useState('');
@@ -127,7 +167,8 @@ export default function HomeScreen() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [language]);
 
-	const lastNiyet = niyets.length > 0 ? niyets[niyets.length - 1] : null;
+	const lastNiyet = niyets.length > 0 ? niyets[0] : null;
+
 	const topStreaks = [...niyets]
 		.sort((a, b) => b.streak - a.streak)
 		.slice(0, 3);
@@ -388,7 +429,7 @@ export default function HomeScreen() {
 						}}
 					>
 						<Pressable
-							onPress={createNiyet}
+							onPress={handleCreateNiyetPress}
 							style={{
 								flex: 1,
 								marginRight: 8,

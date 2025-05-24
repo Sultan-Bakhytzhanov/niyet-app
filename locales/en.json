@@ -42,10 +42,8 @@
 	"add_log": "Add Log",
 	"no_logs": "No logs yet.",
 	"thoughts_placeholder": "Write your thoughts, experiences, or reflections here...",
-
-	"profile": "Profile",
 	"edit_profile": "Edit Profile",
-	"logout": "Log Out",
+
 	"confirm_logout": "Are you sure you want to log out?",
 
 	"name": "Name",
@@ -64,6 +62,23 @@
 	"latest_niyet": "Latest Niyet",
 	"top_streaks": "Top Niyets (by streak)",
 	"no_top_niyets": "You don't have any top niyets yet.",
+
+	"niyets_active": "Active",
+	"niyets_completed": "Completed",
+	"niyets_paused": "Paused",
+	"no_niyets_in_category": "No niyets in this category yet.",
+	"status_paused": "Status: Paused",
+	"status_completed": "Status: Completed",
+
+	"profile_title": "Profile",
+	"profile_personal_info": "Personal Information",
+	"profile_name": "Name",
+	"profile_email": "Email",
+	"profile_app_settings": "App Settings",
+	"profile_notifications": "Notifications",
+	"profile_privacy": "Privacy",
+	"profile_general_settings": "General Settings",
+	"profile_logout": "Log Out",
 
 	"ok": "OK",
 	"yes": "Yes",

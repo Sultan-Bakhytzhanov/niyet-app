@@ -9,17 +9,17 @@ import {
 	Pressable,
 	KeyboardAvoidingView,
 	Platform,
-	Alert, // Для подтверждений
-	TouchableOpacity, // Для лучшего UX на кнопках
+	Alert,
+	TouchableOpacity,
+	Modal,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NiyetInfoCard from '@/components/NiyetInfoCard'; // Предполагаем, что этот компонент отображает всю инфо
+import NiyetInfoCard from '@/components/NiyetInfoCard';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
-// Импортируем иконки (пример, можно использовать expo-vector-icons)
 import { Ionicons } from '@expo/vector-icons';
 import type { Niyet, LogEntry } from '@/types/Niyet';
-// Обновим тип для логов, чтобы включить ID и timestamp
+import i18n from '@/i18n';
 
 const STORAGE_KEY = 'niyets';
 
@@ -28,9 +28,41 @@ export default function NiyetDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
 	const [niyet, setNiyet] = useState<Niyet | null>(null);
-	// logs теперь не нужен как отдельный state, будем брать из niyet.logs
+
 	const [loading, setLoading] = useState(true);
 	const [logInput, setLogInput] = useState('');
+	const [editModalVisible, setEditModalVisible] = useState(false);
+	const [badInput, setBadInput] = useState('');
+	const [goodInput, setGoodInput] = useState('');
+
+	const openEditModal = () => {
+		if (!niyet) return;
+		setBadInput(niyet.bad);
+		setGoodInput(niyet.good || '');
+		setEditModalVisible(true);
+	};
+
+	const saveEditedNiyet = async () => {
+		if (!niyet || !badInput.trim()) {
+			Alert.alert('Ошибка', 'Название вредной привычки не может быть пустым.');
+			return;
+		}
+
+		const updatedNiyet: Niyet = {
+			...niyet,
+			bad: badInput.trim(),
+			good: goodInput.trim() ? goodInput.trim() : undefined,
+		};
+
+		setNiyet(updatedNiyet);
+		setEditModalVisible(false);
+
+		const allNiyets = await getNiyetsFromStorage();
+		const newNiyetsArray = allNiyets.map(n =>
+			n.id === niyet.id ? updatedNiyet : n
+		);
+		await updateNiyetsInStorage(newNiyetsArray);
+	};
 
 	// Функция для обновления ниетов в AsyncStorage
 	const updateNiyetsInStorage = useCallback(async (updatedNiyets: Niyet[]) => {
@@ -43,17 +75,48 @@ export default function NiyetDetailScreen() {
 		return data ? JSON.parse(data) : [];
 	}, []);
 
-	// Загружаем ниет по id
 	useEffect(() => {
 		const loadNiyet = async () => {
 			setLoading(true);
 			const allNiyets = await getNiyetsFromStorage();
 			const foundNiyet = allNiyets.find(n => n.id === id);
+
 			if (foundNiyet) {
-				setNiyet(foundNiyet);
+				// Проверяем, нужно ли установить статус paused
+				let updatedStatus: 'active' | 'paused' | 'completed' =
+					foundNiyet.status ?? 'active';
+
+				if (foundNiyet.lastMarkedDate) {
+					const last = new Date(foundNiyet.lastMarkedDate);
+					const now = new Date();
+					const diffDays =
+						(now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
+
+					if (diffDays >= 7) {
+						updatedStatus = 'paused';
+					}
+				}
+
+				const updatedNiyet = {
+					...foundNiyet,
+					status: updatedStatus,
+				};
+
+				// Обновляем в состоянии
+				setNiyet(updatedNiyet);
+
+				// Если статус изменился — сохранить обратно
+				if (updatedStatus !== foundNiyet.status) {
+					const newNiyetsArray = allNiyets.map(n =>
+						n.id === id ? updatedNiyet : n
+					);
+					await updateNiyetsInStorage(newNiyetsArray);
+				}
 			}
+
 			setLoading(false);
 		};
+
 		loadNiyet();
 	}, [id, getNiyetsFromStorage]);
 
@@ -85,12 +148,12 @@ export default function NiyetDetailScreen() {
 		if (!niyet || !niyet.logs) return;
 
 		Alert.alert(
-			'Удалить запись?',
-			'Вы уверены, что хотите удалить эту запись из журнала?',
+			i18n.t('delete_log_title'), // "Удалить запись?"
+			i18n.t('delete_log_message'), // "Вы уверены, что хотите удалить эту запись из журнала?"
 			[
-				{ text: 'Отмена', style: 'cancel' },
+				{ text: i18n.t('cancel'), style: 'cancel' },
 				{
-					text: 'Удалить',
+					text: i18n.t('delete'),
 					style: 'destructive',
 					onPress: async () => {
 						const updatedLogs = niyet.logs!.filter(
@@ -113,15 +176,60 @@ export default function NiyetDetailScreen() {
 	// Прогресс отмечания дня
 	const onMarkDay = async () => {
 		if (!niyet) return;
-		// TODO: Добавить логику проверки lastMarkedDate для сброса серии, если нужно
-		const newStreak = (niyet.streak ?? 0) + 1;
-		const newProgress = Math.min((niyet.progress ?? 0) + 5, 100); // Увеличиваем на 5%, максимум 100%
-		const updatedNiyet = {
+
+		const today = new Date();
+		const todayStr = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+		const lastDateStr = niyet.lastMarkedDate;
+		const alreadyMarkedToday = lastDateStr === todayStr;
+
+		if (alreadyMarkedToday) {
+			Alert.alert(
+				i18n.t('already_marked_title'), // "Вы уже отмечались сегодня"
+				i18n.t('already_marked_message'), // "Вы уверены, что хотите отметить ещё раз?"
+				[
+					{ text: i18n.t('cancel'), style: 'cancel' },
+					{
+						text: i18n.t('mark_again'),
+						style: 'default',
+						onPress: () => handleMarking(true, false),
+					},
+				]
+			);
+		} else {
+			// Проверим, был ли пропущен день
+			let missed = false;
+			if (lastDateStr) {
+				const lastDate = new Date(lastDateStr);
+				const diffTime = today.getTime() - lastDate.getTime();
+				const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+				if (diffDays >= 2) {
+					missed = true; // пропущено более суток
+				}
+			}
+			handleMarking(false, missed);
+		}
+	};
+
+	const handleMarking = async (forced: boolean, resetStreak: boolean) => {
+		if (!niyet) return;
+
+		const todayStr = new Date().toISOString().slice(0, 10);
+
+		const newStreak = resetStreak ? 1 : (niyet.streak ?? 0) + 1;
+		const newProgress = resetStreak
+			? 0
+			: Math.min((niyet.progress ?? 0) + 5, 100);
+
+		const updatedNiyet: Niyet = {
 			...niyet,
 			streak: newStreak,
 			progress: newProgress,
-			// lastMarkedDate: new Date().toISOString().split('T')[0], // сохраняем только дату
+			lastMarkedDate: todayStr,
+			status: 'active', // строгое значение, уже ожидаемое типом
 		};
+
 		setNiyet(updatedNiyet);
 
 		const allNiyets = await getNiyetsFromStorage();
@@ -134,30 +242,25 @@ export default function NiyetDetailScreen() {
 	// Удаление Ниета
 	const deleteNiyet = async () => {
 		if (!niyet) return;
+
 		Alert.alert(
-			'Удалить Ниет?',
-			`Вы уверены, что хотите удалить ниет "${niyet.bad}"? Это действие необратимо.`,
+			i18n.t('delete_niyet_title'), // 'Удалить Ниет?'
+			i18n.t('delete_niyet_message', { bad: niyet.bad }), // шаблон с подстановкой
 			[
-				{ text: 'Отмена', style: 'cancel' },
+				{ text: i18n.t('cancel'), style: 'cancel' },
 				{
-					text: 'Удалить',
+					text: i18n.t('delete'),
 					style: 'destructive',
 					onPress: async () => {
 						const allNiyets = await getNiyetsFromStorage();
 						const newNiyetsArray = allNiyets.filter(n => n.id !== niyet.id);
 						await updateNiyetsInStorage(newNiyetsArray);
-						router.back(); // Возвращаемся на предыдущий экран
+						router.back();
 					},
 				},
 			]
 		);
 	};
-
-	// Навигация на экран редактирования (предполагается, что такой экран будет)
-	// const navigateToEdit = () => {
-	// 	if (!niyet) return;
-	// 	router.push(`/niyets/edit/${niyet.id}`); // Пример пути
-	// };
 
 	if (loading) {
 		return (
@@ -206,7 +309,7 @@ export default function NiyetDetailScreen() {
 				<NiyetInfoCard niyet={niyet} onMarkDay={onMarkDay} />
 
 				<Text style={[styles.title, { color: colors.text, marginTop: 24 }]}>
-					Журнал мыслей:
+					{i18n.t('thought_journal')}
 				</Text>
 
 				{/* Форма для добавления записи */}
@@ -229,12 +332,12 @@ export default function NiyetDetailScreen() {
 							},
 						]}
 						multiline
-						textAlignVertical='top' // Для Android, чтобы текст начинался сверху в multiline
+						textAlignVertical='top'
 					/>
 					<TouchableOpacity
 						style={[styles.addBtn, { backgroundColor: colors.primary }]}
 						onPress={addLog}
-						disabled={!logInput.trim()} // Делаем кнопку неактивной, если инпут пуст
+						disabled={!logInput.trim()}
 					>
 						<Ionicons name='add-circle-outline' size={24} color='#fff' />
 						{/* <Text style={{ color: '#fff', fontWeight: 'bold' }}>Добавить</Text> */}
@@ -294,7 +397,7 @@ export default function NiyetDetailScreen() {
 							},
 						]}
 					>
-						Записей пока нет. Добавьте свою первую мысль!
+						{i18n.t('no_logs')}
 					</Text>
 				)}
 			</ScrollView>
@@ -302,11 +405,11 @@ export default function NiyetDetailScreen() {
 			<View style={styles.niyetActionsContainer}>
 				<TouchableOpacity
 					style={[styles.actionButton, { borderColor: colors.primary }]}
-					//onPress={navigateToEdit}
+					onPress={openEditModal}
 				>
 					<Ionicons name='create-outline' size={20} color={colors.primary} />
 					<Text style={[styles.actionButtonText, { color: colors.primary }]}>
-						Редактировать
+						{i18n.t('edit')}
 					</Text>
 				</TouchableOpacity>
 				<TouchableOpacity
@@ -315,10 +418,74 @@ export default function NiyetDetailScreen() {
 				>
 					<Ionicons name='trash-outline' size={20} color={colors.error} />
 					<Text style={[styles.actionButtonText, { color: colors.error }]}>
-						Удалить Ниет
+						{i18n.t('delete_niyet')}
 					</Text>
 				</TouchableOpacity>
 			</View>
+			<Modal visible={editModalVisible} transparent animationType='fade'>
+				<View style={styles.modalOverlay}>
+					<View
+						style={[
+							styles.modalContainer,
+							{
+								backgroundColor:
+									colorScheme === 'dark' ? colors.surface : '#fff',
+							},
+						]}
+					>
+						<Text style={[styles.modalTitle, { color: colors.text }]}>
+							{i18n.t('edit_niyet')}
+						</Text>
+
+						<TextInput
+							value={badInput}
+							onChangeText={setBadInput}
+							placeholder={i18n.t('bad_placeholder')}
+							style={[
+								styles.modalInput,
+								{
+									backgroundColor:
+										colorScheme === 'dark' ? '#2d2f3a' : '#f9f9f9',
+									color: colors.text,
+									borderColor: colorScheme === 'dark' ? '#555' : '#ccc',
+								},
+							]}
+						/>
+
+						<TextInput
+							value={goodInput}
+							onChangeText={setGoodInput}
+							placeholder={i18n.t('good_placeholder')}
+							style={[
+								styles.modalInput,
+								{
+									backgroundColor:
+										colorScheme === 'dark' ? '#2d2f3a' : '#f9f9f9',
+									color: colors.text,
+									borderColor: colorScheme === 'dark' ? '#555' : '#ccc',
+								},
+								{ marginTop: 12 },
+							]}
+						/>
+
+						<View style={styles.modalButtons}>
+							<TouchableOpacity
+								style={[styles.modalButton, styles.modalCancel]}
+								onPress={() => setEditModalVisible(false)}
+							>
+								<Text style={styles.modalCancelText}>{i18n.t('cancel')}</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[styles.modalButton, styles.modalSave]}
+								onPress={saveEditedNiyet}
+							>
+								<Text style={styles.modalButtonText}>{i18n.t('save')}</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
 		</KeyboardAvoidingView>
 	);
 }
@@ -329,6 +496,67 @@ const styles = StyleSheet.create({
 		padding: 20,
 		paddingBottom: 40, // Добавим отступ снизу
 	},
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0, 0, 0, 0.4)',
+		justifyContent: 'center',
+		alignItems: 'center',
+		padding: 20,
+	},
+	modalContainer: {
+		width: '100%',
+		maxWidth: 400,
+		backgroundColor: '#fff',
+		borderRadius: 16,
+		padding: 20,
+		elevation: 10,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.15,
+		shadowRadius: 8,
+	},
+	modalTitle: {
+		fontSize: 18,
+		fontWeight: '700',
+		marginBottom: 14,
+		textAlign: 'center',
+	},
+	modalInput: {
+		borderWidth: 1,
+		borderColor: '#ccc',
+		borderRadius: 10,
+		paddingHorizontal: 12,
+		paddingVertical: 10,
+		fontSize: 16,
+		backgroundColor: '#f9f9f9',
+		color: '#222',
+	},
+	modalButtons: {
+		flexDirection: 'row',
+		justifyContent: 'flex-end',
+		marginTop: 20,
+	},
+	modalButton: {
+		paddingVertical: 10,
+		paddingHorizontal: 16,
+		borderRadius: 8,
+		marginLeft: 10,
+	},
+	modalCancel: {
+		backgroundColor: '#e0e0e0',
+	},
+	modalSave: {
+		backgroundColor: '#00A877',
+	},
+	modalButtonText: {
+		color: '#fff',
+		fontWeight: 'bold',
+	},
+	modalCancelText: {
+		color: '#333',
+		fontWeight: 'bold',
+	},
+
 	center: {
 		flex: 1,
 		justifyContent: 'center',
@@ -406,19 +634,21 @@ const styles = StyleSheet.create({
 	},
 	niyetActionsContainer: {
 		flexDirection: 'row',
-		justifyContent: 'space-around', // Или 'flex-end' и gap, если нужно справа
+		// justifyContent: 'space-around',
 		marginTop: 20,
 		marginBottom: 10,
-		gap: 10, // Пространство между кнопками
+		gap: 10,
 	},
 	actionButton: {
+		flex: 1,
 		flexDirection: 'row',
 		alignItems: 'center',
-		paddingVertical: 8,
+		justifyContent: 'center',
+		paddingVertical: 10,
 		paddingHorizontal: 12,
-		borderRadius: 20, // Скругленные кнопки
+		borderRadius: 20,
 		borderWidth: 1.5,
-		// flex: 1, // Если нужно, чтобы кнопки занимали всю доступную ширину поровну
+		marginHorizontal: 5, // небольшое пространство между кнопками
 	},
 	actionButtonText: {
 		marginLeft: 8,

@@ -50,6 +50,7 @@ export default function HomeScreen() {
 
 	const [niyets, setNiyets] = useState<Niyet[]>([]);
 	const STORAGE_KEY = 'niyets';
+
 	useFocusEffect(
 		useCallback(() => {
 			const loadNiyets = async () => {
@@ -78,6 +79,7 @@ export default function HomeScreen() {
 
 		saveNiyetsToStorage();
 	}, [niyets]);
+
 	const [modalVisible, setModalVisible] = useState(false);
 	const [badInput, setBadInput] = useState('');
 	const [goodInput, setGoodInput] = useState('');
@@ -106,12 +108,12 @@ export default function HomeScreen() {
 		const newNiyet: Niyet = {
 			id: Date.now().toString(),
 			bad: badInput.trim(),
-			good: goodInput.trim() || undefined, // Если goodInput пустой, делаем его undefined
+			good: goodInput.trim() || undefined,
 			progress: 0,
 			streak: 0,
-			createdAt: new Date().toISOString(), // Добавляем дату создания
-			status: 'active', // По умолчанию новый ниет активен
-			logs: [], // Инициализируем пустым массивом логов
+			createdAt: new Date().toISOString(),
+			status: 'active',
+			logs: [],
 		};
 
 		try {
@@ -168,7 +170,6 @@ export default function HomeScreen() {
 	}, [language]);
 
 	const lastNiyet = niyets.length > 0 ? niyets[0] : null;
-
 	const topStreaks = [...niyets]
 		.sort((a, b) => b.streak - a.streak)
 		.slice(0, 3);

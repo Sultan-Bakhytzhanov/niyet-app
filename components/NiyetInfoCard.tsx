@@ -9,6 +9,7 @@ import {
 	Animated,
 } from 'react-native';
 import { Flame, BarChart, Calendar, CheckCircle } from 'lucide-react-native';
+import i18n from '@/i18n';
 
 export default function NiyetInfoCard({
 	niyet,
@@ -35,9 +36,13 @@ export default function NiyetInfoCard({
 			{niyet.good ? <Text style={styles.good}>→ {niyet.good}</Text> : null}
 			<View style={styles.infoRow}>
 				<Flame size={18} color='#FF8936' style={styles.icon} />
-				<Text style={styles.infoText}>Стрик: {niyet.streak}</Text>
+				<Text style={styles.infoText}>{`${i18n.t('streak')}: ${
+					niyet.streak
+				}`}</Text>
 				<BarChart size={18} color={accent} style={styles.icon} />
-				<Text style={styles.infoText}>Прогресс: {niyet.progress}%</Text>
+				<Text style={styles.infoText}>{`${i18n.t('progress')}: ${
+					niyet.progress
+				}%`}</Text>
 				<Calendar size={18} color='#57B6F6' style={styles.icon} />
 			</View>
 			{/* Прогресс-бар */}
@@ -56,7 +61,7 @@ export default function NiyetInfoCard({
 			>
 				<CheckCircle size={20} color='#fff' style={{ marginRight: 6 }} />
 				<Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
-					Отметиться
+					{i18n.t('mark_day')}
 				</Text>
 			</Pressable>
 		</View>

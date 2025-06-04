@@ -13,5 +13,5 @@ export type Niyet = {
 	createdAt?: string; // Дата создания Ниета
 	logs?: LogEntry[];
 	status: 'active' | 'completed' | 'paused';
-	// lastMarkedDate?: string; // Для логики сброса серии (пока не реализуем)
+	lastMarkedDate?: string; // Для логики сброса серии (пока не реализуем)
 };

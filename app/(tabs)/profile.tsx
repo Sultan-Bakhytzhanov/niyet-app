@@ -3,12 +3,14 @@ import React from 'react';
 import {
 	View,
 	Pressable,
+	Button,
 	StyleSheet,
 	ScrollView,
 	Image,
 	TouchableOpacity,
 	Text,
 	StatusBar,
+	Alert,
 } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
@@ -149,36 +151,6 @@ export default function ProfileScreen() {
 					textColor={colors.text}
 					iconColor={colors.primary}
 					showChevron={false}
-				/>
-			</Animated.View>
-
-			{/* Секция Настроек Приложения */}
-			<Animated.View style={[styles.card, cardStyle]}>
-				<Text style={[styles.cardTitle, { color: colors.text }]}>
-					{i18n.t('profile_app_settings')}
-				</Text>
-				<ProfileListItem
-					icon={Bell}
-					label={i18n.t('profile_notifications')}
-					textColor={colors.text}
-					iconColor={colors.primary}
-					onPress={() => console.log('Navigate to Notifications Settings')}
-				/>
-				<View style={[styles.divider, { backgroundColor: colors.border }]} />
-				<ProfileListItem
-					icon={Settings2} // или другая иконка для общих настроек
-					label={i18n.t('profile_general_settings')}
-					textColor={colors.text}
-					iconColor={colors.primary}
-					onPress={() => console.log('Navigate to General Settings')} // Заменить на router.push('/settings') если нужно
-				/>
-				<View style={[styles.divider, { backgroundColor: colors.border }]} />
-				<ProfileListItem
-					icon={ShieldCheck}
-					label={i18n.t('profile_privacy')}
-					textColor={colors.text}
-					iconColor={colors.primary}
-					onPress={() => console.log('Navigate to Privacy Settings')}
 				/>
 			</Animated.View>
 

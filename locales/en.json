@@ -22,17 +22,15 @@
 	"contact_us": "Contact Us",
 	"version": "Version 1.0.0",
 	"select_language": "Select Language",
-
+	"goal": "Goal",
 	"my_niyets": "My Niyets",
 	"no_niyets": "You don’t have any Niyets yet.",
 	"create_new": "Create New",
 	"quote_of_the_day": "Quote of the day",
-
+	"mark_day": "Done",
 	"bad_habit": "Bad Habit",
 	"replacement_habit": "Replacement Habit (optional)",
 	"start_date": "Start Date",
-	"save": "Save",
-	"cancel": "Cancel",
 
 	"niyet_details": "Niyet Details",
 	"streak": "Streak",
@@ -40,7 +38,7 @@
 	"progress": "Progress",
 	"log_entry": "Log Entry",
 	"add_log": "Add Log",
-	"no_logs": "No logs yet.",
+
 	"thoughts_placeholder": "Write your thoughts, experiences, or reflections here...",
 	"edit_profile": "Edit Profile",
 
@@ -84,5 +82,25 @@
 	"yes": "Yes",
 	"no": "No",
 	"done": "Done",
-	"back": "Back"
+	"back": "Back",
+	"delete_niyet_title": "Delete Niyet?",
+	"delete_niyet_message": "Are you sure you want to delete niyet \"{{bad}}\"? This action cannot be undone.",
+
+	"already_marked_title": "Already marked today",
+	"already_marked_message": "Are you sure you want to mark again?",
+	"mark_again": "Mark again",
+
+	"delete_log_title": "Delete entry?",
+	"delete_log_message": "Are you sure you want to delete this journal entry?",
+	"delete": "Delete",
+
+	"thought_journal": "Thought Journal",
+	"no_logs": "No logs yet. Add your first thought!",
+	"edit": "Edit",
+	"delete_niyet": "Delete Niyet",
+	"edit_niyet": "Edit Niyet",
+	"bad_placeholder": "Bad habit",
+	"good_placeholder": "Good habit (optional)",
+	"cancel": "Cancel",
+	"save": "Save"
 }

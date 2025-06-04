@@ -8,6 +8,7 @@ import {
 	Text,
 	TextInput,
 	StatusBar,
+	ScrollView,
 } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -43,12 +44,12 @@ const NiyetListItem = ({
 				</Animated.Text>
 				{item.good && (
 					<Animated.Text style={[styles.goodHabit, textColorStyle]}>
-						Цель: {item.good}
+						{`${i18n.t('goal')}: ${item.good}`}
 					</Animated.Text>
 				)}
 				<View style={styles.infoRow}>
 					<Animated.Text style={[styles.infoText, textColorStyle]}>
-						Прогресс: {item.progress}%
+						{`${i18n.t('progress')}: ${item.progress}%`}
 					</Animated.Text>
 					<Animated.Text style={[styles.infoText, textColorStyle]}>
 						🔥 {item.streak}
@@ -221,7 +222,12 @@ export default function NiyetsScreen() {
 			</Animated.Text>
 
 			{/* Вкладки */}
-			<View style={styles.tabsContainer}>
+			<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				contentContainerStyle={styles.tabsContainer}
+				style={{ flexGrow: 0 }}
+			>
 				{TABS.map(tab => (
 					<Pressable
 						key={tab.key}
@@ -249,7 +255,7 @@ export default function NiyetsScreen() {
 						</Animated.Text>
 					</Pressable>
 				))}
-			</View>
+			</ScrollView>
 
 			{displayedNiyets.length > 0 ? (
 				<FlatList
@@ -269,7 +275,6 @@ export default function NiyetsScreen() {
 							colors={colors}
 						/>
 					)}
-					contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
 					showsVerticalScrollIndicator={false}
 				/>
 			) : (
@@ -444,7 +449,7 @@ export default function NiyetsScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		paddingHorizontal: 16, // Уменьшил общий padding для большего пространства контенту
+		paddingHorizontal: 16,
 		paddingTop: 20,
 	},
 	center: {
@@ -459,26 +464,27 @@ const styles = StyleSheet.create({
 	},
 	tabsContainer: {
 		flexDirection: 'row',
-		justifyContent: 'space-around', // Или 'space-between' если нужно больше отступов по краям
-		marginBottom: 20,
-		gap: 10, // Пространство между кнопками вкладок
+		paddingHorizontal: 8,
+		paddingBottom: 8,
+		marginBottom: 16,
 	},
 	tabButton: {
-		flex: 1, // Чтобы кнопки занимали равное пространство
-		paddingVertical: 10,
-		paddingHorizontal: 12, // Можно настроить
-		borderRadius: 20, // Скругленные края
+		paddingVertical: 4, // Уменьшенная высота
+		paddingHorizontal: 24, // Немного уже, но не тесно
+		borderRadius: 16, // Мягкая форма
 		alignItems: 'center',
 		justifyContent: 'center',
-		minHeight: 40, // Минимальная высота для удобства нажатия
+		marginRight: 8,
+		height: 40, // Убираем minHeight, задаём фиксированную высоту
 	},
 	tabButtonText: {
-		fontWeight: '600',
-		fontSize: 14,
+		fontWeight: '500', // Чуть легче, чтобы не распухало
+		fontSize: 14, // Меньше на 1pt
+		lineHeight: 16, // Чуть плотнее
 		textAlign: 'center',
 	},
 	cardOuterPressable: {
-		marginBottom: 12, // Отступ между карточками
+		marginBottom: 12,
 	},
 	card: {
 		padding: 16,

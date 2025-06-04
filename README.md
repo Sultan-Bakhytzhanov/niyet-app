@@ -17,10 +17,9 @@ The project is currently under active development.
 ## ⚙️ Technologies Used
 
 - **React Native** (via Expo)
+- **Expo Router** (for navigation)
 - **TypeScript**
 - **Supabase** (Authentication & Database)
-- **Expo Router** (for navigation)
-- **TailwindCSS for React Native** (via Nativewind)
 
 ## 📂 Project Structure (early version)
 
@@ -73,3 +72,5 @@ The project is currently under active development.
 
 - The app is currently in **MVP development phase**.
 - Design and features are subject to change as testing and feedback are received.
+
+$x%S4pF3tP7CWWY

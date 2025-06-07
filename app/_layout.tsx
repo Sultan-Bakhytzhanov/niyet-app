@@ -19,10 +19,10 @@ export default function RootLayout() {
 						name='settings'
 						options={{ headerTitle: '', headerBackTitle: '' }}
 					/>
-					<Stack.Screen
-						name='(stack)/niyet/[id].tsx]'
+					{/* <Stack.Screen
+						name='(stack)/niyet/[id]'
 						options={{ headerTitle: '', headerBackTitle: '' }}
-					/>
+					/> */}
 				</Stack>
 			</ThemeProvider>
 		</LanguageProvider>

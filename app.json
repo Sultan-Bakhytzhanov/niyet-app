@@ -1,7 +1,8 @@
 {
 	"expo": {
-		"name": "niyet-app",
+		"name": "niyet",
 		"slug": "niyet-app",
+		"owner": "cyberpsyc",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/logo.png",

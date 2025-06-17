@@ -54,7 +54,7 @@ export default function HomeScreen() {
 	useFocusEffect(
 		useCallback(() => {
 			const loadNiyets = async () => {
-				console.log('HomeScreen: Loading niyets on focus...');
+				//console.log('HomeScreen: Loading niyets on focus...');
 				const storedNiyets = await getNiyetsFromStorage(); // Reads from AsyncStorage
 				setNiyets(storedNiyets); // Sets the local state, triggering UI update
 			};
@@ -72,7 +72,7 @@ export default function HomeScreen() {
 				try {
 					await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(niyets));
 				} catch (e) {
-					console.error('HomeScreen: Failed to save niyets to AsyncStorage', e);
+					//	console.error('HomeScreen: Failed to save niyets to AsyncStorage', e);
 				}
 			}
 		};
@@ -101,7 +101,7 @@ export default function HomeScreen() {
 		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
 	) {
 		if (!badInput.trim()) {
-			console.warn("Поле 'Вредная привычка' не может быть пустым.");
+			//	console.warn("Поле 'Вредная привычка' не может быть пустым.");
 			return;
 		}
 
@@ -126,7 +126,7 @@ export default function HomeScreen() {
 			setNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
 			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
 
-			console.log('Ниет успешно создан и сохранен:', newNiyet);
+			//console.log('Ниет успешно создан и сохранен:', newNiyet);
 
 			if (setNiyetsOnScreen) {
 				setNiyetsOnScreen(updatedNiyets);
@@ -188,7 +188,7 @@ export default function HomeScreen() {
 					style={styles.banner}
 					imageStyle={{ borderRadius: 16 }}
 				>
-					{/* <View style={styles.overlay} />
+					<View style={styles.overlay} />
 					<View style={styles.bannerContent}>
 						{loading ? (
 							<ActivityIndicator
@@ -233,7 +233,7 @@ export default function HomeScreen() {
 						<Text style={{ color: bg.isDark ? '#fff' : '#222', fontSize: 13 }}>
 							{i18n.t('update_quote') || 'Обновить цитату'}
 						</Text>
-					</Pressable> */}
+					</Pressable>
 				</ImageBackground>
 
 				{/* Ниеты */}

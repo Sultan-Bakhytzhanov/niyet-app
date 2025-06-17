@@ -23,6 +23,8 @@ import ScaleModal from '@/components/ScaleModal';
 const STORAGE_KEY = 'niyets';
 type TabKey = 'active' | 'completed' | 'paused';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 const NiyetListItem = ({
 	item,
 	textColorStyle,
@@ -96,6 +98,10 @@ export default function NiyetsScreen() {
 	const [goodInput, setGoodInput] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState<TabKey>('active');
+
+	const surfaceStyle = useAnimatedStyle(() => ({
+		backgroundColor: animatedColors.surface.value,
+	}));
 
 	const loadNiyetsFromStorage = useCallback(async (): Promise<Niyet[]> => {
 		try {
@@ -171,7 +177,7 @@ export default function NiyetsScreen() {
 		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
 	) {
 		if (!badInput.trim()) {
-			console.warn("Поле 'Вредная привычка' не может быть пустым.");
+			//	console.warn("Поле 'Вредная привычка' не может быть пустым.");
 			return;
 		}
 
@@ -196,7 +202,7 @@ export default function NiyetsScreen() {
 			setAllNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
 			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
 
-			console.log('Ниет успешно создан и сохранен:', newNiyet);
+			//console.log('Ниет успешно создан и сохранен:', newNiyet);
 
 			if (setNiyetsOnScreen) {
 				setNiyetsOnScreen(updatedNiyets);
@@ -229,17 +235,19 @@ export default function NiyetsScreen() {
 				style={{ flexGrow: 0 }}
 			>
 				{TABS.map(tab => (
-					<Pressable
+					<AnimatedPressable
 						key={tab.key}
 						style={[
 							styles.tabButton,
 							activeTab === tab.key
 								? { backgroundColor: colors?.primary }
-								: {
-										backgroundColor: animatedColors.surface.value,
-										borderColor: colors?.border,
-										borderWidth: 1,
-								  },
+								: [
+										surfaceStyle,
+										{
+											borderColor: colors?.border,
+											borderWidth: 1,
+										},
+								  ],
 						]}
 						onPress={() => setActiveTab(tab.key)}
 					>
@@ -247,13 +255,13 @@ export default function NiyetsScreen() {
 							style={[
 								styles.tabButtonText,
 								activeTab === tab.key
-									? { color: colors.background } // Обычно белый или очень светлый на основном цвете
+									? { color: colors.background }
 									: { color: colors.text },
 							]}
 						>
 							{i18n.t(tab.labelKey)}
 						</Animated.Text>
-					</Pressable>
+					</AnimatedPressable>
 				))}
 			</ScrollView>
 

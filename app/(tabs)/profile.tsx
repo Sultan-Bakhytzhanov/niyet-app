@@ -12,9 +12,10 @@ import {
 	StatusBar,
 	Alert,
 } from 'react-native';
+import { useAuth } from '@/providers/AuthProvider';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
-import { useAnimatedTheme } from '@/providers/ThemeProvider'; // Для цветов поверхности карточек
+import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import i18n from '@/i18n';
 import { useLanguage } from '@/providers/LanguageProvider';
 import {
@@ -25,17 +26,13 @@ import {
 	Bell,
 	ShieldCheck,
 	Settings2,
-} from 'lucide-react-native'; // Пример иконок
+} from 'lucide-react-native';
 
-// Заглушка для данных пользователя, замените на реальные данные
 const userProfile = {
-	name: 'Иван Иванов',
-	email: 'ivan@example.com',
 	avatarUrl:
-		'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y&s=128', // Замените на реальный URL или локальный asset
+		'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y&s=128',
 };
 
-// Компонент для элементов списка настроек/информации
 const ProfileListItem = ({
 	icon: Icon,
 	label,
@@ -79,9 +76,11 @@ const ProfileListItem = ({
 
 export default function ProfileScreen() {
 	useLanguage();
+	const { signOut } = useAuth();
+	const { user, profile } = useAuth();
 	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
-		// withLogo: true, // Обычно лого на экране профиля не нужно
-		// showSettings: true, // Кнопка настроек может быть здесь или в хедере
+		// withLogo: true,
+		// showSettings: true,
 	});
 	const { animatedColors } = useAnimatedTheme();
 
@@ -92,23 +91,6 @@ export default function ProfileScreen() {
 			// shadowColor: colorScheme === 'dark' ? '#050505' : '#B0B0B0',
 		};
 	});
-
-	const handleLogout = () => {
-		// Ваша логика выхода из системы
-		console.log('User logged out');
-		// например, router.replace('/login');
-	};
-
-	// Добавим локализацию для новых ключей
-	// "profile_title": "Профиль",
-	// "profile_personal_info": "Личная информация",
-	// "profile_name": "Имя",
-	// "profile_email": "Электронная почта",
-	// "profile_app_settings": "Настройки приложения",
-	// "profile_notifications": "Уведомления",
-	// "profile_privacy": "Конфиденциальность",
-	// "profile_general_settings": "Общие настройки",
-	// "profile_logout": "Выйти из аккаунта"
 
 	return (
 		<ScrollView
@@ -123,10 +105,10 @@ export default function ProfileScreen() {
 			<View style={styles.headerContainer}>
 				<Image source={{ uri: userProfile.avatarUrl }} style={styles.avatar} />
 				<Text style={[styles.userName, { color: colors.text }]}>
-					{userProfile.name}
+					{profile?.username}
 				</Text>
 				<Text style={[styles.userEmail, { color: colors.textSecondary }]}>
-					{userProfile.email}
+					{profile?.email}
 				</Text>
 			</View>
 
@@ -138,7 +120,7 @@ export default function ProfileScreen() {
 				<ProfileListItem
 					icon={User}
 					label={i18n.t('profile_name')}
-					value={userProfile.name}
+					value={profile?.username}
 					textColor={colors.text}
 					iconColor={colors.primary}
 					showChevron={false} // Обычно имя/email не кликабельны для перехода
@@ -147,7 +129,7 @@ export default function ProfileScreen() {
 				<ProfileListItem
 					icon={Mail}
 					label={i18n.t('profile_email')}
-					value={userProfile.email}
+					value={profile?.email}
 					textColor={colors.text}
 					iconColor={colors.primary}
 					showChevron={false}
@@ -156,8 +138,22 @@ export default function ProfileScreen() {
 
 			{/* Кнопка Выхода */}
 			<TouchableOpacity
-				style={[styles.logoutButton, { backgroundColor: colors.error }]} // Используем цвет ошибки для кнопки выхода
-				onPress={handleLogout}
+				style={[styles.logoutButton, { backgroundColor: colors.error }]}
+				onPress={() =>
+					Alert.alert(
+						'Выход из аккаунта',
+						'Вы уверены, что хотите выйти?',
+						[
+							{ text: 'Отмена', style: 'cancel' },
+							{
+								text: 'Выйти',
+								style: 'destructive',
+								onPress: signOut,
+							},
+						],
+						{ cancelable: true }
+					)
+				}
 			>
 				<LogOut size={20} color='#FFFFFF' style={styles.logoutIcon} />
 				<Text style={styles.logoutButtonText}>{i18n.t('profile_logout')}</Text>

@@ -19,7 +19,7 @@ export default function CustomSwitch({ value, onToggle }: Props) {
 	}, [value]);
 
 	const animatedThumbStyle = useAnimatedStyle(() => ({
-		transform: [{ translateX: offset.value * 16 }], // 🔧 уменьшаем до 16
+		transform: [{ translateX: offset.value * 16 }],
 	}));
 
 	return (
@@ -38,7 +38,7 @@ export default function CustomSwitch({ value, onToggle }: Props) {
 
 const styles = StyleSheet.create({
 	switch: {
-		width: 40, // ⬆ чуть больше для воздуха
+		width: 40,
 		height: 24,
 		borderRadius: 14,
 		padding: 2,

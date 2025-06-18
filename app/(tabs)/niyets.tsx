@@ -177,19 +177,18 @@ export default function NiyetsScreen() {
 		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
 	) {
 		if (!badInput.trim()) {
-			//	console.warn("Поле 'Вредная привычка' не может быть пустым.");
 			return;
 		}
 
 		const newNiyet: Niyet = {
 			id: Date.now().toString(),
 			bad: badInput.trim(),
-			good: goodInput.trim() || undefined, // Если goodInput пустой, делаем его undefined
+			good: goodInput.trim() || undefined,
 			progress: 0,
 			streak: 0,
-			createdAt: new Date().toISOString(), // Добавляем дату создания
-			status: 'active', // По умолчанию новый ниет активен
-			logs: [], // Инициализируем пустым массивом логов
+			createdAt: new Date().toISOString(),
+			status: 'active',
+			logs: [],
 		};
 
 		try {
@@ -201,8 +200,6 @@ export default function NiyetsScreen() {
 			const updatedNiyets = [newNiyet, ...existingNiyets];
 			setAllNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
 			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
-
-			//console.log('Ниет успешно создан и сохранен:', newNiyet);
 
 			if (setNiyetsOnScreen) {
 				setNiyetsOnScreen(updatedNiyets);
@@ -276,8 +273,8 @@ export default function NiyetsScreen() {
 							cardBackgroundStyle={cardBackgroundStyle}
 							onPress={() =>
 								router.push({
-									pathname: '/(stack)/niyet/[id]', // Literal path
-									params: { id: item.id }, // Params
+									pathname: '/(stack)/niyet/[id]',
+									params: { id: item.id },
 								})
 							}
 							colors={colors}

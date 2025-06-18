@@ -54,9 +54,8 @@ export default function HomeScreen() {
 	useFocusEffect(
 		useCallback(() => {
 			const loadNiyets = async () => {
-				//console.log('HomeScreen: Loading niyets on focus...');
-				const storedNiyets = await getNiyetsFromStorage(); // Reads from AsyncStorage
-				setNiyets(storedNiyets); // Sets the local state, triggering UI update
+				const storedNiyets = await getNiyetsFromStorage();
+				setNiyets(storedNiyets);
 			};
 			loadNiyets();
 		}, [])
@@ -71,9 +70,7 @@ export default function HomeScreen() {
 				);
 				try {
 					await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(niyets));
-				} catch (e) {
-					//	console.error('HomeScreen: Failed to save niyets to AsyncStorage', e);
-				}
+				} catch (e) {}
 			}
 		};
 
@@ -101,7 +98,6 @@ export default function HomeScreen() {
 		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
 	) {
 		if (!badInput.trim()) {
-			//	console.warn("Поле 'Вредная привычка' не может быть пустым.");
 			return;
 		}
 
@@ -125,8 +121,6 @@ export default function HomeScreen() {
 			const updatedNiyets = [newNiyet, ...existingNiyets];
 			setNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
 			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
-
-			//console.log('Ниет успешно создан и сохранен:', newNiyet);
 
 			if (setNiyetsOnScreen) {
 				setNiyetsOnScreen(updatedNiyets);
@@ -476,7 +470,6 @@ export default function HomeScreen() {
 	);
 }
 
-// Карточка ниета с поддержкой темы
 function NiyetCard({
 	niyet,
 	colors,

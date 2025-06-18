@@ -11,6 +11,7 @@ interface Profile {
 	username: string;
 	lang?: string;
 	progress?: any;
+	avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -21,9 +22,13 @@ interface AuthContextType {
 	signIn: (email: string, password: string) => Promise<void>;
 	signUp: (email: string, password: string, fullName: string) => Promise<void>;
 	signOut: () => Promise<void>;
+	fetchProfile: (userId: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<
+	| (AuthContextType & { fetchProfile: (id: string) => Promise<void> })
+	| undefined
+>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const [session, setSession] = useState<Session | null>(null);
@@ -67,7 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 					setProfile(null);
 					router.replace('/(auth)/login');
 				} else if (event === 'SIGNED_IN' && session?.user) {
-					// Проверим: есть ли профиль в базе
 					const { data: existingProfile, error: selectError } = await supabase
 						.from('profiles')
 						.select('id')
@@ -75,7 +79,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 						.single();
 
 					if (!existingProfile) {
-						// Пытаемся вставить профиль
 						const { error: insertError } = await supabase
 							.from('profiles')
 							.insert([
@@ -115,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			email,
 			password,
 			options: {
-				data: { username: fullName }, // можно передать имя в метаданных
+				data: { username: fullName },
 			},
 		});
 		if (error) {
@@ -137,6 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				signIn,
 				signUp,
 				signOut,
+				fetchProfile,
 			}}
 		>
 			{children}

@@ -1,4 +1,3 @@
-// ProfileScreen.tsx
 import React from 'react';
 import {
 	View,
@@ -17,6 +16,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import i18n from '@/i18n';
+import { pickAndUploadAvatar } from '@/utils/pickAndUploadAvatar';
 import { useLanguage } from '@/providers/LanguageProvider';
 import {
 	User,
@@ -26,12 +26,11 @@ import {
 	Bell,
 	ShieldCheck,
 	Settings2,
+	Pencil,
 } from 'lucide-react-native';
 
-const userProfile = {
-	avatarUrl:
-		'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y&s=128',
-};
+const defaultAvatar =
+	'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y&s=128';
 
 const ProfileListItem = ({
 	icon: Icon,
@@ -77,7 +76,7 @@ const ProfileListItem = ({
 export default function ProfileScreen() {
 	useLanguage();
 	const { signOut } = useAuth();
-	const { user, profile } = useAuth();
+	const { user, profile, fetchProfile } = useAuth();
 	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
 		// withLogo: true,
 		// showSettings: true,
@@ -87,8 +86,6 @@ export default function ProfileScreen() {
 	const cardStyle = useAnimatedStyle(() => {
 		return {
 			backgroundColor: animatedColors.surface.value,
-			// Можно добавить тени в зависимости от темы, если animatedColors это поддерживает
-			// shadowColor: colorScheme === 'dark' ? '#050505' : '#B0B0B0',
 		};
 	});
 
@@ -103,12 +100,31 @@ export default function ProfileScreen() {
 				barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
 			/>
 			<View style={styles.headerContainer}>
-				<Image source={{ uri: userProfile.avatarUrl }} style={styles.avatar} />
+				<View style={styles.avatarWrapper}>
+					<Image
+						source={{
+							uri: profile?.avatar_url
+								? `${profile.avatar_url}?t=${new Date().getTime()}`
+								: defaultAvatar,
+						}}
+						style={styles.avatar}
+						resizeMode='cover'
+					/>
+
+					<TouchableOpacity
+						style={styles.editButton}
+						onPress={() => {
+							console.log('[AVATAR]', 'Кнопка нажата');
+							if (user?.id) {
+								pickAndUploadAvatar(user.id, fetchProfile);
+							}
+						}}
+					>
+						<Pencil size={16} color='#fff' />
+					</TouchableOpacity>
+				</View>
 				<Text style={[styles.userName, { color: colors.text }]}>
 					{profile?.username}
-				</Text>
-				<Text style={[styles.userEmail, { color: colors.textSecondary }]}>
-					{profile?.email}
 				</Text>
 			</View>
 
@@ -141,12 +157,15 @@ export default function ProfileScreen() {
 				style={[styles.logoutButton, { backgroundColor: colors.error }]}
 				onPress={() =>
 					Alert.alert(
-						'Выход из аккаунта',
-						'Вы уверены, что хотите выйти?',
+						i18n.t('logout_title'),
+						i18n.t('logout_confirm'),
 						[
-							{ text: 'Отмена', style: 'cancel' },
 							{
-								text: 'Выйти',
+								text: i18n.t('cancel'),
+								style: 'cancel',
+							},
+							{
+								text: i18n.t('logout_title'),
 								style: 'destructive',
 								onPress: signOut,
 							},
@@ -174,14 +193,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		marginBottom: 32,
 	},
-	avatar: {
-		width: 100,
-		height: 100,
-		borderRadius: 50,
-		marginBottom: 16,
-		borderWidth: 3,
-		borderColor: '#00C85333', // Легкая обводка основного цвета
-	},
+
 	userName: {
 		fontSize: 24,
 		fontWeight: 'bold',
@@ -189,6 +201,31 @@ const styles = StyleSheet.create({
 	},
 	userEmail: {
 		fontSize: 16,
+	},
+	avatarWrapper: {
+		width: 120,
+		height: 120,
+		position: 'relative',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	avatar: {
+		width: '100%',
+		height: '100%',
+
+		borderRadius: 60,
+		borderWidth: 2,
+		borderColor: '#ccc',
+	},
+	editButton: {
+		position: 'absolute',
+		bottom: 0,
+		right: 0,
+		backgroundColor: '#007AFF',
+		borderRadius: 16,
+		padding: 6,
+		borderWidth: 2,
+		borderColor: '#fff',
 	},
 	card: {
 		borderRadius: 12,

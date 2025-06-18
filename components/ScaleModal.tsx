@@ -37,7 +37,7 @@ const ScaleModal: React.FC<ScaleModalProps> = ({
 			Animated.spring(scale, {
 				toValue: 1,
 				useNativeDriver: true,
-				friction: 10, // Больше = плавнее (обычно 8–20)
+				friction: 10,
 				tension: 50,
 			}).start();
 		} else {

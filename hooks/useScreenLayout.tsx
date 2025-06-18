@@ -14,37 +14,29 @@ type Options = {
 };
 
 type UseScreenLayoutResult = {
-	/** Анимированный стиль фона */
 	backgroundColor: ReturnType<typeof useAnimatedStyle>;
-	/** Анимированный стиль текста */
+
 	textColor: ReturnType<typeof useAnimatedStyle>;
-	/** Статические цвета текущей темы */
+
 	colors: typeof Colors.light;
-	/** Текущая схема: 'light' или 'dark' */
+
 	colorScheme: 'light' | 'dark';
-	/** Опции для header, применяются в screenOptions */
+
 	headerOptions: any;
 };
 
-/**
- * Хук для получения стилей экрана и декларативных опций хедера
- * Без вызова navigation.setOptions внутри.
- */
 export function useScreenLayout(options: Options = {}): UseScreenLayoutResult {
 	const { animatedColors } = useAnimatedTheme();
 	const { colorScheme } = useColorScheme() as { colorScheme: 'light' | 'dark' };
 	const scheme = colorScheme === 'dark' ? 'dark' : 'light';
 	const colors = Colors[scheme];
 
-	// Анимированные стили
 	const backgroundColor = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.background.value,
 	}));
 	const textColor = useAnimatedStyle(() => ({
 		color: animatedColors.text.value,
 	}));
-
-	// Дефолтные опции заголовка из утилиты
 	const defaultHeader = getDefaultHeaderOptions(colorScheme, options.withLogo);
 	const router = useRouter();
 	const headerRight = options.showSettings

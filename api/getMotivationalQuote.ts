@@ -1,10 +1,7 @@
-const API_URL = 'https://api.anthropic.com/v1/messages'; // или актуальный endpoint Anthropic
+const API_URL = 'https://api.anthropic.com/v1/messages';
 
 export async function getMotivationalQuote(language: string = 'en') {
 	const key = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
-	// let languageName = 'English';
-	// if (language === 'ru') languageName = 'Russian';
-	// if (language === 'kk') languageName = 'Kazakh';
 
 	const systemPrompt = `
 You are a creative assistant who generates unique, short, and inspiring motivational quotes for users looking to improve their lives.
@@ -61,7 +58,7 @@ Respond ONLY in JSON format like this: {"quote": "...", "author": "..."}. If the
 		throw new Error('No JSON found in Claude response!');
 	} catch (error) {
 		console.error('Anthropic API Error:', error);
-		// Запасная цитата на нужном языке
+
 		if (language === 'ru') {
 			return {
 				quote:

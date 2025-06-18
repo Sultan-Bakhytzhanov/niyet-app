@@ -42,7 +42,8 @@
 	"thoughts_placeholder": "Write your thoughts, experiences, or reflections here...",
 	"edit_profile": "Edit Profile",
 
-	"confirm_logout": "Are you sure you want to log out?",
+	"logout_title": "Log out",
+	"logout_confirm": "Are you sure you want to log out?",
 
 	"name": "Name",
 	"email": "Email",

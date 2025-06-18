@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
 	View,
 	Text,
@@ -15,11 +15,13 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NiyetInfoCard from '@/components/NiyetInfoCard';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { Ionicons } from '@expo/vector-icons';
-import type { Niyet, LogEntry } from '@/types/Niyet';
+import { useAuth } from '@/providers/AuthProvider';
 import i18n from '@/i18n';
+import { supabase } from '@/lib/supabase';
+import type { Niyet, LogEntry } from '@/types/Niyet';
+import NiyetInfoCard from '@/components/NiyetInfoCard';
 
 const STORAGE_KEY = 'niyets';
 
@@ -27,14 +29,27 @@ export default function NiyetDetailScreen() {
 	const { colors, colorScheme } = useScreenLayout();
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
-	const [niyet, setNiyet] = useState<Niyet | null>(null);
+	const { user } = useAuth(); // Используем user из контекста
 
+	const [niyet, setNiyet] = useState<Niyet | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [logInput, setLogInput] = useState('');
 	const [editModalVisible, setEditModalVisible] = useState(false);
 	const [badInput, setBadInput] = useState('');
 	const [goodInput, setGoodInput] = useState('');
 
+	// Функция для получения всех ниетов из AsyncStorage
+	const getNiyetsFromStorage = useCallback(async (): Promise<Niyet[]> => {
+		const data = await AsyncStorage.getItem(STORAGE_KEY);
+		return data ? JSON.parse(data) : [];
+	}, []);
+
+	// Функция для обновления ниетов в AsyncStorage
+	const updateNiyetsInStorage = useCallback(async (updatedNiyets: Niyet[]) => {
+		await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
+	}, []);
+
+	// Открытие модального окна для редактирования
 	const openEditModal = () => {
 		if (!niyet) return;
 		setBadInput(niyet.bad);
@@ -42,6 +57,7 @@ export default function NiyetDetailScreen() {
 		setEditModalVisible(true);
 	};
 
+	// Сохранение отредактированного ниета
 	const saveEditedNiyet = async () => {
 		if (!niyet || !badInput.trim()) {
 			Alert.alert('Ошибка', 'Название вредной привычки не может быть пустым.');
@@ -57,68 +73,46 @@ export default function NiyetDetailScreen() {
 		setNiyet(updatedNiyet);
 		setEditModalVisible(false);
 
-		const allNiyets = await getNiyetsFromStorage();
-		const newNiyetsArray = allNiyets.map(n =>
-			n.id === niyet.id ? updatedNiyet : n
-		);
-		await updateNiyetsInStorage(newNiyetsArray);
+		// Обновляем данные на сервере
+		const { error } = await supabase
+			.from('niyets')
+			.update(updatedNiyet)
+			.eq('id', id);
+
+		if (error) {
+			Alert.alert(
+				'Ошибка обновления',
+				'Не удалось обновить ниет: ' + error.message
+			);
+		} else {
+			Alert.alert('Успех', 'Ниет обновлен');
+		}
 	};
 
-	// Функция для обновления ниетов в AsyncStorage
-	const updateNiyetsInStorage = useCallback(async (updatedNiyets: Niyet[]) => {
-		await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
-	}, []);
+	// Получение ниета из базы данных
+	const fetchNiyet = useCallback(async () => {
+		if (!user) return;
+		setLoading(true);
 
-	// Функция для получения всех ниетов
-	const getNiyetsFromStorage = useCallback(async (): Promise<Niyet[]> => {
-		const data = await AsyncStorage.getItem(STORAGE_KEY);
-		return data ? JSON.parse(data) : [];
-	}, []);
+		// Загружаем ниет с сервера
+		const { data, error } = await supabase
+			.from('niyets')
+			.select('*')
+			.eq('user_id', user.id)
+			.eq('id', id)
+			.single();
+
+		if (error) {
+			Alert.alert('Ошибка загрузки', error.message);
+		} else {
+			setNiyet(data);
+		}
+		setLoading(false);
+	}, [user, id]);
 
 	useEffect(() => {
-		const loadNiyet = async () => {
-			setLoading(true);
-			const allNiyets = await getNiyetsFromStorage();
-			const foundNiyet = allNiyets.find(n => n.id === id);
-
-			if (foundNiyet) {
-				// Проверяем, нужно ли установить статус paused
-				let updatedStatus: 'active' | 'paused' | 'completed' =
-					foundNiyet.status ?? 'active';
-
-				if (foundNiyet.lastMarkedDate) {
-					const last = new Date(foundNiyet.lastMarkedDate);
-					const now = new Date();
-					const diffDays =
-						(now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
-
-					if (diffDays >= 7) {
-						updatedStatus = 'paused';
-					}
-				}
-
-				const updatedNiyet = {
-					...foundNiyet,
-					status: updatedStatus,
-				};
-
-				// Обновляем в состоянии
-				setNiyet(updatedNiyet);
-
-				// Если статус изменился — сохранить обратно
-				if (updatedStatus !== foundNiyet.status) {
-					const newNiyetsArray = allNiyets.map(n =>
-						n.id === id ? updatedNiyet : n
-					);
-					await updateNiyetsInStorage(newNiyetsArray);
-				}
-			}
-
-			setLoading(false);
-		};
-
-		loadNiyet();
-	}, [id, getNiyetsFromStorage]);
+		fetchNiyet();
+	}, [fetchNiyet]);
 
 	// Добавление новой записи в журнал
 	const addLog = async () => {
@@ -135,12 +129,15 @@ export default function NiyetDetailScreen() {
 		setNiyet(updatedNiyet); // Обновляем локальное состояние
 		setLogInput('');
 
-		// Обновляем в AsyncStorage
-		const allNiyets = await getNiyetsFromStorage();
-		const newNiyetsArray = allNiyets.map(n =>
-			n.id === niyet.id ? updatedNiyet : n
-		);
-		await updateNiyetsInStorage(newNiyetsArray);
+		// Обновляем в Supabase
+		const { error } = await supabase
+			.from('niyets')
+			.update({ logs: updatedLogs })
+			.eq('id', id);
+
+		if (error) {
+			Alert.alert('Ошибка', 'Не удалось обновить журнал: ' + error.message);
+		}
 	};
 
 	// Удаление записи из журнала
@@ -162,11 +159,18 @@ export default function NiyetDetailScreen() {
 						const updatedNiyet = { ...niyet, logs: updatedLogs };
 						setNiyet(updatedNiyet);
 
-						const allNiyets = await getNiyetsFromStorage();
-						const newNiyetsArray = allNiyets.map(n =>
-							n.id === niyet.id ? updatedNiyet : n
-						);
-						await updateNiyetsInStorage(newNiyetsArray);
+						// Обновляем в Supabase
+						const { error } = await supabase
+							.from('niyets')
+							.update({ logs: updatedLogs })
+							.eq('id', id);
+
+						if (error) {
+							Alert.alert(
+								'Ошибка удаления',
+								'Не удалось удалить запись: ' + error.message
+							);
+						}
 					},
 				},
 			]
@@ -232,11 +236,18 @@ export default function NiyetDetailScreen() {
 
 		setNiyet(updatedNiyet);
 
-		const allNiyets = await getNiyetsFromStorage();
-		const newNiyetsArray = allNiyets.map(n =>
-			n.id === niyet.id ? updatedNiyet : n
-		);
-		await updateNiyetsInStorage(newNiyetsArray);
+		// Обновляем в Supabase
+		const { error } = await supabase
+			.from('niyets')
+			.update(updatedNiyet)
+			.eq('id', id);
+
+		if (error) {
+			Alert.alert(
+				'Ошибка обновления',
+				'Не удалось обновить статус: ' + error.message
+			);
+		}
 	};
 
 	// Удаление Ниета
@@ -252,10 +263,24 @@ export default function NiyetDetailScreen() {
 					text: i18n.t('delete'),
 					style: 'destructive',
 					onPress: async () => {
-						const allNiyets = await getNiyetsFromStorage();
-						const newNiyetsArray = allNiyets.filter(n => n.id !== niyet.id);
-						await updateNiyetsInStorage(newNiyetsArray);
-						router.back();
+						// Удаление из базы данных Supabase
+						const { error } = await supabase
+							.from('niyets')
+							.delete()
+							.eq('id', id);
+
+						if (error) {
+							Alert.alert(
+								'Ошибка удаления',
+								'Не удалось удалить ниет: ' + error.message
+							);
+						} else {
+							// Удаляем локально
+							const allNiyets = await getNiyetsFromStorage();
+							const newNiyetsArray = allNiyets.filter(n => n.id !== niyet.id);
+							await updateNiyetsInStorage(newNiyetsArray);
+							router.back(); // Возвращаемся назад
+						}
 					},
 				},
 			]
@@ -278,13 +303,7 @@ export default function NiyetDetailScreen() {
 				</Text>
 				<Pressable
 					onPress={() => router.back()}
-					style={[
-						styles.backBtn,
-						{
-							backgroundColor:
-								colorScheme === 'dark' ? colors.surface : '#e9e9ed',
-						},
-					]}
+					style={[styles.backBtn, { backgroundColor: colors.surface }]}
 				>
 					<Text style={{ color: colors.primary, fontWeight: 'bold' }}>
 						Назад
@@ -319,18 +338,7 @@ export default function NiyetDetailScreen() {
 						onChangeText={setLogInput}
 						placeholder='Поделитесь мыслями, опытом или заметкой...'
 						placeholderTextColor={colorScheme === 'dark' ? '#aaa' : '#888'}
-						style={[
-							styles.input,
-							{
-								backgroundColor:
-									colorScheme === 'dark' ? colors.surface : '#f3f6fa',
-								color: colors.text,
-								borderColor:
-									colorScheme === 'dark'
-										? colors.border || '#393955'
-										: '#e2e7ee',
-							},
-						]}
+						style={[styles.input, { backgroundColor: colors.surface }]}
 						multiline
 						textAlignVertical='top'
 					/>
@@ -340,7 +348,6 @@ export default function NiyetDetailScreen() {
 						disabled={!logInput.trim()}
 					>
 						<Ionicons name='add-circle-outline' size={24} color='#fff' />
-						{/* <Text style={{ color: '#fff', fontWeight: 'bold' }}>Добавить</Text> */}
 					</TouchableOpacity>
 				</View>
 
@@ -349,17 +356,7 @@ export default function NiyetDetailScreen() {
 					niyet.logs!.map(log => (
 						<View
 							key={log.id}
-							style={[
-								styles.logItem,
-								{
-									backgroundColor:
-										colorScheme === 'dark' ? colors.surface : '#f8f9fd',
-									borderColor:
-										colorScheme === 'dark'
-											? colors.border || '#393955'
-											: '#e8eaf0',
-								},
-							]}
+							style={[styles.logItem, { backgroundColor: colors.surface }]}
 						>
 							<Text style={[styles.logText, { color: colors.text }]}>
 								{log.text}
@@ -380,27 +377,19 @@ export default function NiyetDetailScreen() {
 									<Ionicons
 										name='trash-bin-outline'
 										size={20}
-										color={colors.error || '#F66'}
+										color={colors.error}
 									/>
 								</TouchableOpacity>
 							</View>
 						</View>
 					))
 				) : (
-					<Text
-						style={[
-							styles.value,
-							{
-								color: colors.textSecondary,
-								marginTop: 10,
-								textAlign: 'center',
-							},
-						]}
-					>
+					<Text style={[styles.value, { color: colors.textSecondary }]}>
 						{i18n.t('no_logs')}
 					</Text>
 				)}
 			</ScrollView>
+
 			{/* Кнопки действий для Ниета */}
 			<View style={styles.niyetActionsContainer}>
 				<TouchableOpacity
@@ -422,70 +411,6 @@ export default function NiyetDetailScreen() {
 					</Text>
 				</TouchableOpacity>
 			</View>
-			<Modal visible={editModalVisible} transparent animationType='fade'>
-				<View style={styles.modalOverlay}>
-					<View
-						style={[
-							styles.modalContainer,
-							{
-								backgroundColor:
-									colorScheme === 'dark' ? colors.surface : '#fff',
-							},
-						]}
-					>
-						<Text style={[styles.modalTitle, { color: colors.text }]}>
-							{i18n.t('edit_niyet')}
-						</Text>
-
-						<TextInput
-							value={badInput}
-							onChangeText={setBadInput}
-							placeholder={i18n.t('bad_placeholder')}
-							style={[
-								styles.modalInput,
-								{
-									backgroundColor:
-										colorScheme === 'dark' ? '#2d2f3a' : '#f9f9f9',
-									color: colors.text,
-									borderColor: colorScheme === 'dark' ? '#555' : '#ccc',
-								},
-							]}
-						/>
-
-						<TextInput
-							value={goodInput}
-							onChangeText={setGoodInput}
-							placeholder={i18n.t('good_placeholder')}
-							style={[
-								styles.modalInput,
-								{
-									backgroundColor:
-										colorScheme === 'dark' ? '#2d2f3a' : '#f9f9f9',
-									color: colors.text,
-									borderColor: colorScheme === 'dark' ? '#555' : '#ccc',
-								},
-								{ marginTop: 12 },
-							]}
-						/>
-
-						<View style={styles.modalButtons}>
-							<TouchableOpacity
-								style={[styles.modalButton, styles.modalCancel]}
-								onPress={() => setEditModalVisible(false)}
-							>
-								<Text style={styles.modalCancelText}>{i18n.t('cancel')}</Text>
-							</TouchableOpacity>
-
-							<TouchableOpacity
-								style={[styles.modalButton, styles.modalSave]}
-								onPress={saveEditedNiyet}
-							>
-								<Text style={styles.modalButtonText}>{i18n.t('save')}</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</View>
-			</Modal>
 		</KeyboardAvoidingView>
 	);
 }

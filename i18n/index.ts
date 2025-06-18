@@ -12,7 +12,7 @@ const i18n = new I18n({
 });
 
 const locales = Localization.getLocales();
-i18n.locale = locales[0]?.languageCode || 'en';
+i18n.locale = locales[0]?.languageCode || 'ru';
 i18n.enableFallback = true;
 
 export default i18n;

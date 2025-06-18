@@ -12,13 +12,14 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useRouter, useFocusEffect } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAnimatedTheme } from '@/providers/ThemeProvider';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { useLanguage } from '@/providers/LanguageProvider';
 import i18n from '@/i18n';
 import type { Niyet } from '@/types/Niyet';
 import ScaleModal from '@/components/ScaleModal';
+import { useAuth } from '@/providers/AuthProvider';
+import { supabase } from '@/lib/supabase';
 
 const STORAGE_KEY = 'niyets';
 type TabKey = 'active' | 'completed' | 'paused';
@@ -89,9 +90,10 @@ export default function NiyetsScreen() {
 	const cardBackgroundStyle = useAnimatedStyle(() => ({
 		backgroundColor: animatedColors.surface.value,
 	}));
+
 	useLanguage();
 	const router = useRouter();
-
+	const { user, profile } = useAuth();
 	const [allNiyets, setAllNiyets] = useState<Niyet[]>([]);
 	const [modalVisible, setModalVisible] = useState(false);
 	const [badInput, setBadInput] = useState('');
@@ -103,30 +105,43 @@ export default function NiyetsScreen() {
 		backgroundColor: animatedColors.surface.value,
 	}));
 
-	const loadNiyetsFromStorage = useCallback(async (): Promise<Niyet[]> => {
+	const fetchNiyetsFromServer = useCallback(async (): Promise<Niyet[]> => {
 		try {
-			const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-			const niyetsFromStorage: Niyet[] = jsonValue ? JSON.parse(jsonValue) : [];
-			return niyetsFromStorage.map(n => ({
+			if (!user?.id) {
+				console.error('Пользователь не авторизован, id не найден');
+				return [];
+			}
+
+			const { data, error } = await supabase
+				.from('niyets')
+				.select('*')
+				.eq('user_id', user.id);
+
+			if (error) {
+				console.error('Ошибка загрузки ниетов:', error);
+				return [];
+			}
+
+			return data.map(n => ({
 				...n,
 				status: n.status || (n.progress >= 100 ? 'completed' : 'active'),
 			}));
 		} catch (e) {
-			console.error('NiyetsScreen: Ошибка загрузки ниетов:', e);
+			console.error('Ошибка загрузки ниетов:', e);
 			return [];
 		}
-	}, []);
+	}, [user?.id]);
 
 	useFocusEffect(
 		useCallback(() => {
 			const fetchNiyets = async () => {
 				setLoading(true);
-				const storedNiyets = await loadNiyetsFromStorage();
+				const storedNiyets = await fetchNiyetsFromServer();
 				setAllNiyets(storedNiyets);
 				setLoading(false);
 			};
 			fetchNiyets();
-		}, [loadNiyetsFromStorage])
+		}, [fetchNiyetsFromServer])
 	);
 
 	const displayedNiyets = useMemo(() => {
@@ -170,13 +185,14 @@ export default function NiyetsScreen() {
 		setBadInput('');
 		setGoodInput('');
 	}
+
 	async function createNiyet(
 		badInput: string,
 		goodInput: string,
-		closeModal: () => void,
-		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
+		closeModal: () => void
 	) {
-		if (!badInput.trim()) {
+		if (!user?.id || !badInput.trim()) {
+			console.error('Пользователь не авторизован или не указан вредный обычай');
 			return;
 		}
 
@@ -189,31 +205,22 @@ export default function NiyetsScreen() {
 			createdAt: new Date().toISOString(),
 			status: 'active',
 			logs: [],
+			user_id: user.id,
 		};
 
-		try {
-			const existingNiyetsJson = await AsyncStorage.getItem(STORAGE_KEY);
-			const existingNiyets: Niyet[] = existingNiyetsJson
-				? JSON.parse(existingNiyetsJson)
-				: [];
-
-			const updatedNiyets = [newNiyet, ...existingNiyets];
-			setAllNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
-			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
-
-			if (setNiyetsOnScreen) {
-				setNiyetsOnScreen(updatedNiyets);
-			}
-
-			closeModal();
-		} catch (error) {
+		const { error } = await supabase.from('niyets').insert([newNiyet]);
+		if (error) {
 			console.error('Ошибка при создании ниета:', error);
+		} else {
+			setAllNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
+			closeModal();
 		}
 	}
 
 	const handleCreateNiyetPress = async () => {
 		await createNiyet(badInput, goodInput, closeModal);
 	};
+
 	return (
 		<Animated.View style={[styles.container, backgroundColor]}>
 			<StatusBar

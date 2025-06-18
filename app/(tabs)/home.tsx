@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
 	View,
 	Text,
@@ -10,19 +10,20 @@ import {
 	ActivityIndicator,
 	Modal,
 	TextInput,
-	TouchableWithoutFeedback,
+	ScrollView,
+	Alert,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useScreenLayout } from '@/hooks/useScreenLayout';
 import i18n from '@/i18n';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { getMotivationalQuote } from '@/api/getMotivationalQuote';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import ScaleModal from '@/components/ScaleModal';
 import { useFocusEffect } from '@react-navigation/native';
-import { ScrollView } from 'react-native';
-import type { Niyet, LogEntry } from '@/types/Niyet';
+import type { Niyet } from '@/types/Niyet';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/providers/AuthProvider';
 
 const backgrounds = [
 	{ img: require('@/assets/images/bg1.png'), isDark: true },
@@ -30,18 +31,9 @@ const backgrounds = [
 	{ img: require('@/assets/images/bg3.jpg'), isDark: true },
 ];
 
-async function getNiyetsFromStorage(): Promise<Niyet[]> {
-	try {
-		const jsonValue = await AsyncStorage.getItem('niyets');
-		return jsonValue != null ? JSON.parse(jsonValue) : [];
-	} catch (e) {
-		console.error('Ошибка загрузки ниетов:', e);
-		return [];
-	}
-}
-
 export default function HomeScreen() {
 	const { language } = useLanguage();
+	const { user, profile } = useAuth();
 	const router = useRouter();
 	const { backgroundColor, textColor, colors, colorScheme } = useScreenLayout({
 		withLogo: true,
@@ -49,91 +41,61 @@ export default function HomeScreen() {
 	});
 
 	const [niyets, setNiyets] = useState<Niyet[]>([]);
-	const STORAGE_KEY = 'niyets';
-
-	useFocusEffect(
-		useCallback(() => {
-			const loadNiyets = async () => {
-				const storedNiyets = await getNiyetsFromStorage();
-				setNiyets(storedNiyets);
-			};
-			loadNiyets();
-		}, [])
-	);
-
-	useEffect(() => {
-		const saveNiyetsToStorage = async () => {
-			if (niyets !== undefined) {
-				console.log(
-					'HomeScreen: Saving niyets to AsyncStorage due to state change...',
-					niyets
-				);
-				try {
-					await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(niyets));
-				} catch (e) {}
-			}
-		};
-
-		saveNiyetsToStorage();
-	}, [niyets]);
-
 	const [modalVisible, setModalVisible] = useState(false);
 	const [badInput, setBadInput] = useState('');
 	const [goodInput, setGoodInput] = useState('');
 
-	function openModal() {
-		setTimeout(() => {
-			setModalVisible(true);
-		}, 50);
-	}
-	function closeModal() {
+	useFocusEffect(
+		useCallback(() => {
+			const fetchNiyets = async () => {
+				if (!user) return;
+				const { data, error } = await supabase
+					.from('niyets')
+					.select('*')
+					.eq('user_id', user.id)
+					.order('created_at', { ascending: false });
+				if (error) {
+					console.error('Ошибка загрузки ниетов:', error.message);
+				} else {
+					setNiyets(data);
+				}
+			};
+			fetchNiyets();
+		}, [user])
+	);
+
+	const createNiyet = async () => {
+		if (!badInput.trim() || !user) return;
+
+		const newNiyet: Partial<Niyet> = {
+			bad: badInput.trim(),
+			good: goodInput.trim() || undefined,
+
+			progress: 0,
+			streak: 0,
+			status: 'active',
+			user_id: user.id,
+		};
+
+		const { data, error } = await supabase
+			.from('niyets')
+			.insert(newNiyet)
+			.select();
+		if (error) {
+			Alert.alert('Ошибка', 'Не удалось создать ниет: ' + error.message);
+			return;
+		}
+		if (data) {
+			setNiyets(prev => [data[0], ...prev]);
+			closeModal();
+		}
+	};
+
+	const openModal = () => setModalVisible(true);
+	const closeModal = () => {
 		setModalVisible(false);
 		setBadInput('');
 		setGoodInput('');
-	}
-	async function createNiyet(
-		badInput: string,
-		goodInput: string,
-		closeModal: () => void,
-		setNiyetsOnScreen?: React.Dispatch<React.SetStateAction<Niyet[]>>
-	) {
-		if (!badInput.trim()) {
-			return;
-		}
-
-		const newNiyet: Niyet = {
-			id: Date.now().toString(),
-			bad: badInput.trim(),
-			good: goodInput.trim() || undefined,
-			progress: 0,
-			streak: 0,
-			createdAt: new Date().toISOString(),
-			status: 'active',
-			logs: [],
-		};
-
-		try {
-			const existingNiyetsJson = await AsyncStorage.getItem(STORAGE_KEY);
-			const existingNiyets: Niyet[] = existingNiyetsJson
-				? JSON.parse(existingNiyetsJson)
-				: [];
-
-			const updatedNiyets = [newNiyet, ...existingNiyets];
-			setNiyets(prevNiyets => [newNiyet, ...prevNiyets]);
-			await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
-
-			if (setNiyetsOnScreen) {
-				setNiyetsOnScreen(updatedNiyets);
-			}
-
-			closeModal();
-		} catch (error) {
-			console.error('Ошибка при создании ниета:', error);
-		}
-	}
-
-	const handleCreateNiyetPress = async () => {
-		await createNiyet(badInput, goodInput, closeModal);
 	};
 
 	const [bg, setBg] = useState(backgrounds[0]);
@@ -143,13 +105,12 @@ export default function HomeScreen() {
 
 	const rerenderQuoteBlock = async () => {
 		setLoading(true);
-		const randBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-		setBg(randBg);
+		setBg(backgrounds[Math.floor(Math.random() * backgrounds.length)]);
 		try {
 			const res = await getMotivationalQuote(language);
 			setQuote(res.quote);
 			setAuthor(res.author);
-		} catch (e) {
+		} catch {
 			setQuote(
 				'Каждый маленький шаг — это прогресс. Твои намерения формируют твою реальность.'
 			);
@@ -160,10 +121,9 @@ export default function HomeScreen() {
 
 	useEffect(() => {
 		rerenderQuoteBlock();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [language]);
 
-	const lastNiyet = niyets.length > 0 ? niyets[0] : null;
+	const lastNiyet = niyets[0] || null;
 	const topStreaks = [...niyets]
 		.sort((a, b) => b.streak - a.streak)
 		.slice(0, 3);
@@ -176,7 +136,6 @@ export default function HomeScreen() {
 			/>
 
 			<Animated.View style={[styles.container, backgroundColor]}>
-				{/* Блок с цитатой и кнопкой */}
 				<ImageBackground
 					source={bg.img}
 					style={styles.banner}
@@ -225,115 +184,104 @@ export default function HomeScreen() {
 						disabled={loading}
 					>
 						<Text style={{ color: bg.isDark ? '#fff' : '#222', fontSize: 13 }}>
-							{i18n.t('update_quote') || 'Обновить цитату'}
+							{i18n.t('update_quote')}
 						</Text>
 					</Pressable>
 				</ImageBackground>
 
-				{/* Ниеты */}
 				<View style={styles.section}>
-					<View style={styles.section}>
-						<Text style={[styles.sectionTitle, { color: colors.text }]}>
-							{i18n.t('latest_niyet') || 'Последний ниет'}
+					<Text style={[styles.sectionTitle, { color: colors.text }]}>
+						{i18n.t('latest_niyet')}
+					</Text>
+					{lastNiyet ? (
+						<Pressable
+							onPress={() =>
+								router.push({
+									pathname: '/(stack)/niyet/[id]',
+									params: { id: lastNiyet.id },
+								})
+							}
+						>
+							<NiyetCard
+								niyet={lastNiyet}
+								colors={colors}
+								colorScheme={colorScheme}
+							/>
+						</Pressable>
+					) : (
+						<Text
+							style={{
+								color: colors.secondary,
+								textAlign: 'center',
+								marginVertical: 12,
+							}}
+						>
+							{i18n.t('no_niyets')}
 						</Text>
-						{lastNiyet ? (
+					)}
+
+					<Text
+						style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}
+					>
+						{i18n.t('top_streaks')}
+					</Text>
+					{topStreaks.length > 0 ? (
+						topStreaks.map(niyet => (
 							<Pressable
+								key={niyet.id}
 								onPress={() =>
 									router.push({
 										pathname: '/(stack)/niyet/[id]',
-										params: { id: lastNiyet.id },
+										params: { id: niyet.id },
 									})
 								}
 							>
 								<NiyetCard
-									niyet={lastNiyet}
+									niyet={niyet}
 									colors={colors}
 									colorScheme={colorScheme}
 								/>
 							</Pressable>
-						) : (
-							<Text
-								style={{
-									color: colors.secondary,
-									textAlign: 'center',
-									marginVertical: 12,
-								}}
-							>
-								{i18n.t('no_niyets') || 'Нет ни одного ниета'}
-							</Text>
-						)}
-
+						))
+					) : (
 						<Text
-							style={[
-								styles.sectionTitle,
-								{ color: colors.text, marginTop: 24 },
-							]}
+							style={{
+								color: colors.secondary,
+								textAlign: 'center',
+								marginVertical: 12,
+							}}
 						>
-							{i18n.t('top_streaks') || 'Топ-3 по стрику'}
+							{i18n.t('no_top_niyets')}
 						</Text>
-
-						{topStreaks.length > 0 ? (
-							topStreaks.map(niyet => (
-								<Pressable
-									key={niyet.id}
-									onPress={() =>
-										router.push({
-											pathname: '/(stack)/niyet/[id]',
-											params: { id: niyet.id },
-										})
-									}
-								>
-									<NiyetCard
-										niyet={niyet}
-										colors={colors}
-										colorScheme={colorScheme}
-									/>
-								</Pressable>
-							))
-						) : (
-							<Text
-								style={{
-									color: colors.secondary,
-									textAlign: 'center',
-									marginVertical: 12,
-								}}
-							>
-								{i18n.t('no_top_niyets') || 'Нет данных для топа'}
-							</Text>
-						)}
-					</View>
-
-					<Pressable
-						style={[
-							styles.createBtn,
-							{
-								backgroundColor:
-									colorScheme === 'dark'
-										? colors.surface || '#232536'
-										: colors.primary || '#00A877',
-								borderWidth: colorScheme === 'dark' ? 0 : 1,
-								borderColor: colorScheme === 'dark' ? 'transparent' : '#00A877',
-							},
-						]}
-						onPress={openModal}
-					>
-						<Text
-							style={[
-								styles.createBtnText,
-								{
-									color:
-										colorScheme === 'dark'
-											? colors.primary || '#6FE3C1'
-											: '#fff',
-								},
-							]}
-						>
-							+ {i18n.t('add_niyet')}
-						</Text>
-					</Pressable>
+					)}
 				</View>
 
-				{/* Модальное окно для создания ниета */}
+				<Pressable
+					style={[
+						styles.createBtn,
+						{
+							backgroundColor:
+								colorScheme === 'dark'
+									? colors.surface || '#232536'
+									: colors.primary || '#00A877',
+							borderWidth: colorScheme === 'dark' ? 0 : 1,
+							borderColor: colorScheme === 'dark' ? 'transparent' : '#00A877',
+						},
+					]}
+					onPress={openModal}
+				>
+					<Text
+						style={{
+							color:
+								colorScheme === 'dark' ? colors.primary || '#6FE3C1' : '#fff',
+							fontWeight: '600',
+							fontSize: 16,
+						}}
+					>
+						+ {i18n.t('add_niyet')}
+					</Text>
+				</Pressable>
+
 				<ScaleModal
 					visible={modalVisible}
 					onClose={closeModal}
@@ -362,21 +310,17 @@ export default function HomeScreen() {
 							textAlign: 'center',
 						}}
 					>
-						{i18n.t('add_niyet') || 'Создать новый ниет'}
+						{i18n.t('add_niyet')}
 					</Text>
 					<Text
-						style={{
-							color: colors.secondary,
-							fontSize: 14,
-							marginBottom: 4,
-						}}
+						style={{ color: colors.secondary, fontSize: 14, marginBottom: 4 }}
 					>
-						{i18n.t('bad_habit') || 'Вредная привычка'}*
+						{i18n.t('bad_habit')}*
 					</Text>
 					<TextInput
 						value={badInput}
 						onChangeText={setBadInput}
-						placeholder={i18n.t('habit_example') || 'Например, курение'}
+						placeholder={i18n.t('habit_example')}
 						placeholderTextColor={colorScheme === 'dark' ? '#555' : '#bcbcbc'}
 						style={{
 							borderWidth: 1,
@@ -391,18 +335,14 @@ export default function HomeScreen() {
 						}}
 					/>
 					<Text
-						style={{
-							color: colors.secondary,
-							fontSize: 14,
-							marginBottom: 4,
-						}}
+						style={{ color: colors.secondary, fontSize: 14, marginBottom: 4 }}
 					>
-						{i18n.t('good_habit') || 'Полезная замена (необязательно)'}
+						{i18n.t('good_habit')}
 					</Text>
 					<TextInput
 						value={goodInput}
 						onChangeText={setGoodInput}
-						placeholder={i18n.t('good_example') || 'Например, бегать утром'}
+						placeholder={i18n.t('good_example')}
 						placeholderTextColor={colorScheme === 'dark' ? '#555' : '#bcbcbc'}
 						style={{
 							borderWidth: 1,
@@ -424,7 +364,7 @@ export default function HomeScreen() {
 						}}
 					>
 						<Pressable
-							onPress={handleCreateNiyetPress}
+							onPress={createNiyet}
 							style={{
 								flex: 1,
 								marginRight: 8,
@@ -435,7 +375,7 @@ export default function HomeScreen() {
 							}}
 						>
 							<Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-								{i18n.t('create') || 'Создать'}
+								{i18n.t('create')}
 							</Text>
 						</Pressable>
 						<Pressable
@@ -460,7 +400,7 @@ export default function HomeScreen() {
 									fontSize: 16,
 								}}
 							>
-								{i18n.t('cancel') || 'Отмена'}
+								{i18n.t('cancel')}
 							</Text>
 						</Pressable>
 					</View>
@@ -533,7 +473,7 @@ function NiyetCard({
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1, padding: 0 },
+	container: { flex: 1 },
 	banner: { height: 170, margin: 12, borderRadius: 16, overflow: 'hidden' },
 	overlay: {
 		...StyleSheet.absoluteFillObject,
@@ -552,22 +492,13 @@ const styles = StyleSheet.create({
 		marginBottom: 8,
 	},
 	quoteAuthor: { fontSize: 14, textAlign: 'center' },
-
 	section: { marginTop: 8, marginHorizontal: 12 },
 	sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
-	card: {
-		borderRadius: 12,
-		padding: 12,
-		marginBottom: 12,
-	},
+	card: { borderRadius: 12, padding: 12, marginBottom: 12 },
 	bad: { fontSize: 16, fontWeight: '600' },
 	good: { fontSize: 15, marginTop: 2 },
 	progressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-	progressBarContainer: {
-		flex: 1,
-		height: 6,
-		borderRadius: 3,
-	},
+	progressBarContainer: { flex: 1, height: 6, borderRadius: 3 },
 	progressBar: { height: 6, borderRadius: 3 },
 	streak: { fontSize: 12, marginLeft: 8 },
 	createBtn: {
@@ -577,5 +508,4 @@ const styles = StyleSheet.create({
 		marginTop: 12,
 		marginBottom: 16,
 	},
-	createBtnText: { fontSize: 16, fontWeight: '600' },
 });

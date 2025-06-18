@@ -1,7 +1,7 @@
 export type LogEntry = {
 	id: string;
 	text: string;
-	createdAt: string; // ISO date string
+	createdAt: string;
 };
 
 export type Niyet = {
@@ -10,8 +10,9 @@ export type Niyet = {
 	good?: string;
 	progress: number;
 	streak: number;
-	createdAt?: string; // Дата создания Ниета
+	createdAt?: string;
 	logs?: LogEntry[];
 	status: 'active' | 'completed' | 'paused';
-	lastMarkedDate?: string; // Для логики сброса серии (пока не реализуем)
+	lastMarkedDate?: string;
+	user_id: string;
 };

@@ -1,6 +1,3 @@
-ErrorUtils.setGlobalHandler((error, isFatal) => {
-	console.log('Global Error:', error);
-});
 import { useAuth } from '@/providers/AuthProvider';
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';

@@ -10,7 +10,7 @@ interface LanguageContextProps {
 }
 
 const LanguageContext = createContext<LanguageContextProps>({
-	language: 'en',
+	language: 'ru',
 	setLanguage: () => {},
 });
 
@@ -20,7 +20,7 @@ export const LanguageProvider = ({
 	children: React.ReactNode;
 }) => {
 	const defaultLang =
-		(Localization.getLocales()[0]?.languageCode as Language) || 'en';
+		(Localization.getLocales()[0]?.languageCode as Language) || 'ru';
 	const [language, setLang] = useState<Language>(defaultLang);
 
 	useEffect(() => {

@@ -12,7 +12,6 @@ import i18n from '@/i18n';
 import type { Language } from '@/providers/LanguageProvider';
 
 export default function SettingsScreen() {
-	const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
 	const { language, setLanguage } = useLanguage();
 
 	const availableLangs: Language[] = ['en', 'ru', 'kz'];
@@ -81,23 +80,6 @@ export default function SettingsScreen() {
 					<CustomSwitch
 						value={colorScheme === 'dark'}
 						onToggle={toggleColorScheme}
-					/>
-				</View>
-
-				{/* 🔔 Notifications */}
-				<View style={styles.row}>
-					<Ionicons
-						name='notifications-outline'
-						size={24}
-						color={colors.text}
-					/>
-					<Animated.Text style={[styles.label, textColor]}>
-						{i18n.t('notifications')}
-					</Animated.Text>
-					<View style={styles.flexSpacer} />
-					<CustomSwitch
-						value={notificationsEnabled}
-						onToggle={() => setNotificationsEnabled(prev => !prev)}
 					/>
 				</View>
 

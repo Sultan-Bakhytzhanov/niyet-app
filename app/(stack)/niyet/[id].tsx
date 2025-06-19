@@ -29,7 +29,7 @@ export default function NiyetDetailScreen() {
 	const { colors, colorScheme } = useScreenLayout();
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
-	const { user } = useAuth(); // Используем user из контекста
+	const { user } = useAuth();
 
 	const [niyet, setNiyet] = useState<Niyet | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -38,18 +38,15 @@ export default function NiyetDetailScreen() {
 	const [badInput, setBadInput] = useState('');
 	const [goodInput, setGoodInput] = useState('');
 
-	// Функция для получения всех ниетов из AsyncStorage
 	const getNiyetsFromStorage = useCallback(async (): Promise<Niyet[]> => {
 		const data = await AsyncStorage.getItem(STORAGE_KEY);
 		return data ? JSON.parse(data) : [];
 	}, []);
 
-	// Функция для обновления ниетов в AsyncStorage
 	const updateNiyetsInStorage = useCallback(async (updatedNiyets: Niyet[]) => {
 		await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNiyets));
 	}, []);
 
-	// Открытие модального окна для редактирования
 	const openEditModal = () => {
 		if (!niyet) return;
 		setBadInput(niyet.bad);
@@ -57,7 +54,6 @@ export default function NiyetDetailScreen() {
 		setEditModalVisible(true);
 	};
 
-	// Сохранение отредактированного ниета
 	const saveEditedNiyet = async () => {
 		if (!niyet || !badInput.trim()) {
 			Alert.alert('Ошибка', 'Название вредной привычки не может быть пустым.');
@@ -73,7 +69,6 @@ export default function NiyetDetailScreen() {
 		setNiyet(updatedNiyet);
 		setEditModalVisible(false);
 
-		// Обновляем данные на сервере
 		const { error } = await supabase
 			.from('niyets')
 			.update(updatedNiyet)
@@ -89,12 +84,10 @@ export default function NiyetDetailScreen() {
 		}
 	};
 
-	// Получение ниета из базы данных
 	const fetchNiyet = useCallback(async () => {
 		if (!user) return;
 		setLoading(true);
 
-		// Загружаем ниет с сервера
 		const { data, error } = await supabase
 			.from('niyets')
 			.select('*')
@@ -114,22 +107,20 @@ export default function NiyetDetailScreen() {
 		fetchNiyet();
 	}, [fetchNiyet]);
 
-	// Добавление новой записи в журнал
 	const addLog = async () => {
 		if (!logInput.trim() || !niyet) return;
 
 		const newLog: LogEntry = {
-			id: Date.now().toString(), // Уникальный ID для лога
+			id: Date.now().toString(),
 			text: logInput.trim(),
 			createdAt: new Date().toISOString(),
 		};
 
 		const updatedLogs = [newLog, ...(niyet.logs || [])];
 		const updatedNiyet = { ...niyet, logs: updatedLogs };
-		setNiyet(updatedNiyet); // Обновляем локальное состояние
+		setNiyet(updatedNiyet);
 		setLogInput('');
 
-		// Обновляем в Supabase
 		const { error } = await supabase
 			.from('niyets')
 			.update({ logs: updatedLogs })
@@ -140,57 +131,50 @@ export default function NiyetDetailScreen() {
 		}
 	};
 
-	// Удаление записи из журнала
 	const deleteLog = async (logIdToDelete: string) => {
 		if (!niyet || !niyet.logs) return;
 
-		Alert.alert(
-			i18n.t('delete_log_title'), // "Удалить запись?"
-			i18n.t('delete_log_message'), // "Вы уверены, что хотите удалить эту запись из журнала?"
-			[
-				{ text: i18n.t('cancel'), style: 'cancel' },
-				{
-					text: i18n.t('delete'),
-					style: 'destructive',
-					onPress: async () => {
-						const updatedLogs = niyet.logs!.filter(
-							log => log.id !== logIdToDelete
+		Alert.alert(i18n.t('delete_log_title'), i18n.t('delete_log_message'), [
+			{ text: i18n.t('cancel'), style: 'cancel' },
+			{
+				text: i18n.t('delete'),
+				style: 'destructive',
+				onPress: async () => {
+					const updatedLogs = niyet.logs!.filter(
+						log => log.id !== logIdToDelete
+					);
+					const updatedNiyet = { ...niyet, logs: updatedLogs };
+					setNiyet(updatedNiyet);
+
+					const { error } = await supabase
+						.from('niyets')
+						.update({ logs: updatedLogs })
+						.eq('id', id);
+
+					if (error) {
+						Alert.alert(
+							'Ошибка удаления',
+							'Не удалось удалить запись: ' + error.message
 						);
-						const updatedNiyet = { ...niyet, logs: updatedLogs };
-						setNiyet(updatedNiyet);
-
-						// Обновляем в Supabase
-						const { error } = await supabase
-							.from('niyets')
-							.update({ logs: updatedLogs })
-							.eq('id', id);
-
-						if (error) {
-							Alert.alert(
-								'Ошибка удаления',
-								'Не удалось удалить запись: ' + error.message
-							);
-						}
-					},
+					}
 				},
-			]
-		);
+			},
+		]);
 	};
 
-	// Прогресс отмечания дня
 	const onMarkDay = async () => {
 		if (!niyet) return;
 
 		const today = new Date();
-		const todayStr = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+		const todayStr = today.toISOString().slice(0, 10);
 
 		const lastDateStr = niyet.lastMarkedDate;
 		const alreadyMarkedToday = lastDateStr === todayStr;
 
 		if (alreadyMarkedToday) {
 			Alert.alert(
-				i18n.t('already_marked_title'), // "Вы уже отмечались сегодня"
-				i18n.t('already_marked_message'), // "Вы уверены, что хотите отметить ещё раз?"
+				i18n.t('already_marked_title'),
+				i18n.t('already_marked_message'),
 				[
 					{ text: i18n.t('cancel'), style: 'cancel' },
 					{
@@ -201,7 +185,6 @@ export default function NiyetDetailScreen() {
 				]
 			);
 		} else {
-			// Проверим, был ли пропущен день
 			let missed = false;
 			if (lastDateStr) {
 				const lastDate = new Date(lastDateStr);
@@ -209,7 +192,7 @@ export default function NiyetDetailScreen() {
 				const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
 				if (diffDays >= 2) {
-					missed = true; // пропущено более суток
+					missed = true;
 				}
 			}
 			handleMarking(false, missed);
@@ -231,12 +214,11 @@ export default function NiyetDetailScreen() {
 			streak: newStreak,
 			progress: newProgress,
 			lastMarkedDate: todayStr,
-			status: 'active', // строгое значение, уже ожидаемое типом
+			status: 'active',
 		};
 
 		setNiyet(updatedNiyet);
 
-		// Обновляем в Supabase
 		const { error } = await supabase
 			.from('niyets')
 			.update(updatedNiyet)
@@ -250,20 +232,18 @@ export default function NiyetDetailScreen() {
 		}
 	};
 
-	// Удаление Ниета
 	const deleteNiyet = async () => {
 		if (!niyet) return;
 
 		Alert.alert(
-			i18n.t('delete_niyet_title'), // 'Удалить Ниет?'
-			i18n.t('delete_niyet_message', { bad: niyet.bad }), // шаблон с подстановкой
+			i18n.t('delete_niyet_title'),
+			i18n.t('delete_niyet_message', { bad: niyet.bad }),
 			[
 				{ text: i18n.t('cancel'), style: 'cancel' },
 				{
 					text: i18n.t('delete'),
 					style: 'destructive',
 					onPress: async () => {
-						// Удаление из базы данных Supabase
 						const { error } = await supabase
 							.from('niyets')
 							.delete()
@@ -275,11 +255,10 @@ export default function NiyetDetailScreen() {
 								'Не удалось удалить ниет: ' + error.message
 							);
 						} else {
-							// Удаляем локально
 							const allNiyets = await getNiyetsFromStorage();
 							const newNiyetsArray = allNiyets.filter(n => n.id !== niyet.id);
 							await updateNiyetsInStorage(newNiyetsArray);
-							router.back(); // Возвращаемся назад
+							router.back();
 						}
 					},
 				},
